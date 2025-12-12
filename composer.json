@@ -1,0 +1,19 @@
+{
+    "name": "boevendatabase/project",
+    "description": "Boevendatabase project met dotenv",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "vlucas/phpdotenv": "^5.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    }
+}
