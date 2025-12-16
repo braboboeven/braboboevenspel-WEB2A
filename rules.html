@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spelregels</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            letter-spacing: 0.3em;
+            color: #ffffff;
+        }
+
+        .rules-box {
+            background-color: #2d2d2d;
+            padding: 50px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .rule {
+            margin-bottom: 35px;
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        .rule:last-child {
+            margin-bottom: 0;
+        }
+
+        .rule-number {
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+                letter-spacing: 0.2em;
+            }
+
+            .rules-box {
+                padding: 30px;
+            }
+
+            .rule {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>spelregels</h1>
+        <div class="rules-box">
+            <div class="rule">
+                <span class="rule-number">1.</span> het spel is  in groepjes behalve als je een kleine klas hebt kan het individueel dus iedereen apart.
+            </div>
+
+            <div class="rule">
+                <span class="rule-number">2.</span> ieder groepje speelt op 1 laptop.
+            </div>
+
+            <div class="rule">
+                <span class="rule-number">3.</span> voor de docent is er een dashboard die alle scores bij houdt van de leerlingen.
+            </div>
+
+            <div class="rule">
+                <span class="rule-number">4.</span> per verdachte moet een groepje 5 SQL statements invoeren<br>
+                per goede query kan je maximaal 1000 dollar verdienen. als<br>
+                je een fout hebt gemaakt door geen hoofdletters te gebruiken<br>
+                of een puntkomma bent vergeten krijg je 500 dollar. per verdachte kun je dus maximaal 5000 punten verdienen.
+            </div>
+
+            <div class="rule">
+                <span class="rule-number">5.</span> Het spel eindigt als je het snelste bent met je groepje die 10000 punten heeft verdiend dan heb je gewonnen. De docent kan ook zien hoever iedereen is.
+            </div>
+
+            <div class="rule">
+                <span class="rule-number">6.</span> het zijn altijd open vragen.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
