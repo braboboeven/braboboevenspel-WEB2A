@@ -97,6 +97,63 @@ class boevenDatabaseSetup
             echo "error " . $this->conn->error . "<br>";
         }
 
+        // spelconfig: zaken/dossiers per verdachte of misdaad
+        $sql = "CREATE TABLE IF NOT EXISTS CaseFile (
+            id INT AUTO_INCREMENT,
+            case_code VARCHAR(50) NOT NULL,
+            title VARCHAR(120) NOT NULL,
+            suspect_id INT DEFAULT NULL,
+            approach ENUM('verdachte','misdaad','bigboss') DEFAULT 'verdachte',
+            reward_full INT DEFAULT 1000,
+            reward_partial INT DEFAULT 500,
+            total_queries INT DEFAULT 5,
+            PRIMARY KEY (id),
+            UNIQUE KEY uniq_case_code (case_code)
+        )";
+        if (!$this->conn->query($sql)) {
+            echo "error " . $this->conn->error . "<br>";
+        }
+
+        // hints per zaak
+        $sql = "CREATE TABLE IF NOT EXISTS Hint (
+            id INT AUTO_INCREMENT,
+            case_id INT NOT NULL,
+            seq INT NOT NULL,
+            tekst TEXT NOT NULL,
+            expected_sql TEXT NOT NULL,
+            is_bonus BIT DEFAULT 0,
+            reward_full INT DEFAULT NULL,
+            reward_partial INT DEFAULT NULL,
+            PRIMARY KEY (id),
+            UNIQUE KEY uniq_case_seq (case_id, seq),
+            INDEX idx_case (case_id),
+            CONSTRAINT fk_hint_case FOREIGN KEY (case_id) REFERENCES CaseFile(id) ON DELETE CASCADE
+        )";
+        if (!$this->conn->query($sql)) {
+            echo "error " . $this->conn->error . "<br>";
+        }
+
+        // ingestuurde oplossingen per hint
+        $sql = "CREATE TABLE IF NOT EXISTS Submission (
+            id INT AUTO_INCREMENT,
+            session_code VARCHAR(50) NOT NULL,
+            group_name VARCHAR(100) NOT NULL,
+            case_id INT NOT NULL,
+            hint_id INT NOT NULL,
+            submitted_sql TEXT NOT NULL,
+            awarded_points INT NOT NULL,
+            is_correct BIT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uniq_submission (session_code, group_name, hint_id),
+            INDEX idx_submission_case (case_id),
+            CONSTRAINT fk_submission_hint FOREIGN KEY (hint_id) REFERENCES Hint(id) ON DELETE CASCADE,
+            CONSTRAINT fk_submission_case FOREIGN KEY (case_id) REFERENCES CaseFile(id) ON DELETE CASCADE
+        )";
+        if (!$this->conn->query($sql)) {
+            echo "error " . $this->conn->error . "<br>";
+        }
+
         echo "succesvol aangemaakt <br>";
     }
 
@@ -106,6 +163,125 @@ class boevenDatabaseSetup
         $this->insertVerdachten();
         //voert alle misdaad inserts uit
         $this->insertMisdaden();
+        //voert alle spelcase/hint inserts uit
+        $this->insertGameCases();
+    }
+
+    private function insertGameCases()
+    {
+        // definieer basiszaken
+        $cases = [
+            [
+                'case_code' => 'CASE-V001',
+                'title' => 'Signalementspoor: Keyser Soze',
+                'suspect_id' => 225,
+                'approach' => 'verdachte',
+                'reward_full' => 1000,
+                'reward_partial' => 500,
+                'total_queries' => 5,
+            ],
+            [
+                'case_code' => 'CASE-M001',
+                'title' => 'Misdaadspoor: Bankroof Rotterdam',
+                'suspect_id' => 202,
+                'approach' => 'misdaad',
+                'reward_full' => 1000,
+                'reward_partial' => 500,
+                'total_queries' => 5,
+            ],
+            [
+                'case_code' => 'CASE-BB01',
+                'title' => 'Big Boss bonuszaak',
+                'suspect_id' => null,
+                'approach' => 'bigboss',
+                'reward_full' => 1200,
+                'reward_partial' => 700,
+                'total_queries' => 5,
+            ],
+        ];
+
+        $caseStmt = $this->conn->prepare("INSERT INTO CaseFile (case_code, title, suspect_id, approach, reward_full, reward_partial, total_queries)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE title = VALUES(title), suspect_id = VALUES(suspect_id), approach = VALUES(approach), reward_full = VALUES(reward_full), reward_partial = VALUES(reward_partial), total_queries = VALUES(total_queries)");
+        foreach ($cases as $case) {
+            $caseStmt->bind_param(
+                'ssisiii',
+                $case['case_code'],
+                $case['title'],
+                $case['suspect_id'],
+                $case['approach'],
+                $case['reward_full'],
+                $case['reward_partial'],
+                $case['total_queries']
+            );
+            if (!$caseStmt->execute()) {
+                echo "error " . $this->conn->error . "<br>";
+            }
+        }
+        $caseStmt->close();
+
+        // hulp om case_id te vinden
+        $caseIdStmt = $this->conn->prepare("SELECT id FROM CaseFile WHERE case_code = ? LIMIT 1");
+
+        // definieer hints per case
+        $hints = [
+            // CASE-V001: signalement
+            ['CASE-V001', 1, 'Selecteer alle verdachten die een man zijn met zwarte haren.', "SELECT verdachte_id, naam FROM Verdachte WHERE geslacht = 'man' AND haarkleur = 'zwart';", 0, null, null],
+            ['CASE-V001', 2, 'Filter op bril en gezichtsbeharing om de shortlist kleiner te maken.', "SELECT verdachte_id, naam FROM Verdachte WHERE geslacht = 'man' AND haarkleur = 'zwart' AND bril = 'ja' AND gezichtsbeharing = 1;", 0, null, null],
+            ['CASE-V001', 3, 'Gebruik schoenmaat om de top 3 te vinden.', "SELECT verdachte_id, naam FROM Verdachte WHERE geslacht = 'man' AND haarkleur = 'zwart' AND bril = 'ja' AND gezichtsbeharing = 1 AND schoenmaat = 'klein';", 0, null, null],
+            ['CASE-V001', 4, 'Controleer leeftijd en tatoeages om de verdachte te isoleren.', "SELECT verdachte_id, naam FROM Verdachte WHERE geslacht = 'man' AND haarkleur = 'zwart' AND bril = 'ja' AND gezichtsbeharing = 1 AND schoenmaat = 'klein' AND leeftijd > 40 AND tatoeages = 1;", 0, null, null],
+            ['CASE-V001', 5, 'Finale: haal de naam van verdachte #225 op.', "SELECT naam FROM Verdachte WHERE verdachte_id = 225;", 0, null, null],
+
+            // CASE-M001: misdaadgericht
+            ['CASE-M001', 1, 'Zoek de meest recente bankroof.', "SELECT misdaad_id, verdachte_id FROM Misdaad WHERE misdaad_type = 'bankroof' ORDER BY datum_gepleegd DESC LIMIT 1;", 0, null, null],
+            ['CASE-M001', 2, 'Haal de gevangenis op waar de dader zat.', "SELECT gevangenis FROM Misdaad WHERE misdaad_type = 'bankroof' ORDER BY datum_gepleegd DESC LIMIT 1;", 0, null, null],
+            ['CASE-M001', 3, 'Bekijk gedrag in de gevangenis voor deze dader.', "SELECT gedrag FROM Misdaad WHERE misdaad_type = 'bankroof' ORDER BY datum_gepleegd DESC LIMIT 1;", 0, null, null],
+            ['CASE-M001', 4, 'Koppel het verdachte_id aan de verdachten-tabel.', "SELECT v.naam FROM Verdachte v JOIN Misdaad m ON v.verdachte_id = m.verdachte_id WHERE m.misdaad_type = 'bankroof' ORDER BY m.datum_gepleegd DESC LIMIT 1;", 0, null, null],
+            ['CASE-M001', 5, 'Bonus: check of de dader meerdere misdaden heeft.', "SELECT m.verdachte_id, COUNT(*) AS aantal FROM Misdaad m GROUP BY m.verdachte_id HAVING COUNT(*) > 1;", 1, 1200, 700],
+
+            // CASE-BB01: Big Boss
+            ['CASE-BB01', 1, 'Selecteer verdachten met tatoeages én baard.', "SELECT verdachte_id, naam FROM Verdachte WHERE tatoeages = 1 AND gezichtsbeharing = 1;", 1, 1200, 700],
+            ['CASE-BB01', 2, 'Filter op leeftijd tussen 30 en 50 en geen bril.', "SELECT verdachte_id, naam FROM Verdachte WHERE tatoeages = 1 AND gezichtsbeharing = 1 AND leeftijd BETWEEN 30 AND 50 AND bril = 'nee';", 1, 1200, 700],
+            ['CASE-BB01', 3, 'Voeg haarkleur rood of blond toe.', "SELECT verdachte_id, naam FROM Verdachte WHERE tatoeages = 1 AND gezichtsbeharing = 1 AND leeftijd BETWEEN 30 AND 50 AND bril = 'nee' AND haarkleur IN ('rood','blond');", 1, 1200, 700],
+            ['CASE-BB01', 4, 'Gebruik ORDER BY voor grootste schoenmaat eerst.', "SELECT verdachte_id, naam FROM Verdachte WHERE tatoeages = 1 AND gezichtsbeharing = 1 AND leeftijd BETWEEN 30 AND 50 AND bril = 'nee' AND haarkleur IN ('rood','blond') ORDER BY schoenmaat DESC;", 1, 1200, 700],
+            ['CASE-BB01', 5, 'Laat alleen de top-verdachte zien.', "SELECT verdachte_id, naam FROM Verdachte WHERE tatoeages = 1 AND gezichtsbeharing = 1 AND leeftijd BETWEEN 30 AND 50 AND bril = 'nee' AND haarkleur IN ('rood','blond') ORDER BY schoenmaat DESC LIMIT 1;", 1, 1500, 900],
+        ];
+
+        $hintStmt = $this->conn->prepare("INSERT INTO Hint (case_id, seq, tekst, expected_sql, is_bonus, reward_full, reward_partial)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE tekst = VALUES(tekst), expected_sql = VALUES(expected_sql), is_bonus = VALUES(is_bonus), reward_full = VALUES(reward_full), reward_partial = VALUES(reward_partial)");
+
+        foreach ($hints as $hint) {
+            [$caseCode, $seq, $tekst, $expectedSql, $isBonus, $rewardFull, $rewardPartial] = $hint;
+            $caseId = null;
+            $caseIdStmt->bind_param('s', $caseCode);
+            $caseIdStmt->execute();
+            $caseIdStmt->bind_result($caseId);
+            $caseIdStmt->store_result();
+            $caseIdStmt->fetch();
+            $caseIdStmt->free_result();
+
+            if (!$caseId) {
+                continue;
+            }
+
+            $hintStmt->bind_param(
+                'iissiii',
+                $caseId,
+                $seq,
+                $tekst,
+                $expectedSql,
+                $isBonus,
+                $rewardFull,
+                $rewardPartial
+            );
+            if (!$hintStmt->execute()) {
+                echo "error " . $this->conn->error . "<br>";
+            }
+        }
+
+        $caseIdStmt->close();
+        $hintStmt->close();
     }
 
     private function insertVerdachten()
