@@ -80,6 +80,23 @@ class boevenDatabaseSetup
             echo "error " . $this->conn->error . "<br>";
         }
 
+        // scores per sessie/speler
+        $sql = "CREATE TABLE IF NOT EXISTS SessionScore (
+            id INT AUTO_INCREMENT,
+            session_code VARCHAR(50) NOT NULL,
+            player_name VARCHAR(100) NOT NULL,
+            score INT NOT NULL DEFAULT 0,
+            last_question_id INT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY(id),
+            UNIQUE KEY uniq_session_player (session_code, player_name),
+            INDEX idx_session (session_code)
+        )";
+        if (!$this->conn->query($sql)) {
+            echo "error " . $this->conn->error . "<br>";
+        }
+
         echo "succesvol aangemaakt <br>";
     }
 
