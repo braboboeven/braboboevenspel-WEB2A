@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./CSS/cssReset.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            color: white;
+
+        }
+        input {
+            color: black;
+        }
+        body {
+            font-family: 'Cutive Mono', monospace;
+        }
+        h2 {
+            font-size: 2.5em;
+        }
+
+        .containerDashboard {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: row;
+            background-color: #1A1A1D;
+        }
+        .leaderboard {
+
+            background-color: #2E2E33;
+            width: 25vw;
+            height: 100vh;
+            display: grid;
+            grid-auto-flow: row;      /* Fill downward, then create new column */
+            grid-template-rows: repeat(12, 8vh); /* 12 vertical slots */
+            gap: 6px;
+        }
+        .leaderboardContainer {
+            display: flex;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            grid-row: span 2;
+        }
+        .leaderboardpunten {
+            align-items: center;
+            background-color: #1A1A1D;
+            display: grid;
+            grid-auto-flow: column;  
+            grid-template-columns: repeat(3, auto);
+            margin-left: 0.5vw;
+            margin-right: 0.5vw;
+            padding-left: 1.5vw;
+            padding-right: 1.5vw;
+        }
+        .leaderboardpunten >div {
+            grid-column: span 1;
+        }
+
+        .vragenDisplay {
+            width: 45vw;
+            height: 90vh;
+            margin-left: 2.5vw;
+            margin-right: 2.5vw;
+            background-color: #3F3F46;
+        
+
+        }
+        .vragenDisplay>div{
+            width: 40vw;
+
+        }
+        .groepDisplayContainer {
+            display: flex;
+            flex-direction: row;
+        }
+        .timerControl {
+            width: 15vw;
+            margin-top: 5vh;
+            margin-bottom: 5vh;
+            margin-left: 2.5vw;
+            margin-right: 2.5vw;
+
+            
+        }
+
+    </style>
+</head>
+<body>
+    <div class="containerDashboard">
+        <div class="leaderboard">
+            <div class="leaderboardContainer">
+                <h2>leaderboard</h2>
+            </div>
+            <div class="leaderboardpunten">
+                <div>Naam</div>
+                <div>Geld</div>
+                <div>Tijd</div>
+            </div>
+            <div class="leaderboardpunten">
+                <div>Naam</div>
+                <div>Geld</div>
+                <div>Tijd</div>
+            </div>
+            <div class="leaderboardpunten">
+                <div>Naam</div>
+                <div>Geld</div>
+                <div>Tijd</div>
+            </div>
+            <div class="leaderboardpunten">
+                <div>Naam</div>
+                <div>Geld</div>
+                <div>Tijd</div>
+            </div>
+            <div class="leaderboardpunten">
+                <div>Naam</div>
+                <div>Geld</div>
+                <div>Tijd</div>
+            </div>
+            <div class="leaderboardpunten">
+                <div>Naam</div>
+                <div>Geld</div>
+                <div>Tijd</div>
+            </div>
+            <div class="leaderboardpunten">
+                <div>Naam</div>
+                <div>Geld</div>
+                <div>Tijd</div>
+            </div>
+            <div class="leaderboardpunten">
+                <div>Naam</div>
+                <div>Geld</div>
+                <div>Tijd</div>
+            </div>
+            <div class="leaderboardpunten">
+                <div>Naam</div>
+                <div>Geld</div>
+                <div>Tijd</div>
+            </div>
+            
+        </div>
+        <div class="vragenDisplay">
+            <div class="groepDisplayContainer">
+                <img src="../../afbeeldingen/PijltjeLinks.png" alt="">
+                <h2>Groep</h2>
+                <img src="../../afbeeldingen/PijltjeRechts.png" alt="">
+            </div>
+            <div class="groepVragenDisplay"></div>
+            <div class="goedAntwoordDisplay"></div>
+        </div>
+        <div class="timerControl">test3</div>
+    </div>
+</body>
+</html>
