@@ -101,7 +101,7 @@
                 ];
             }
 
-            if ($aantal_rijen == $verwacht_aantal) {
+            if ($aantal_rijen == $verwacht_aantal || $this->IsHalfCorrect($aantal_rijen, $verwacht_aantal, 1)) {
                 return [
                     "score" => 500,
                     "feedback" => "✓ Correct aantal rijen! Je krijgt €500\n\n<strong>Juiste query:</strong>\n" . $correcte_query
