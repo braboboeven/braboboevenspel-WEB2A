@@ -1,0 +1,22 @@
+* {
+    color: white;
+}
+.slot-box {
+	border: 2px solid red;
+	padding: 20px;
+	margin: 10px;
+	background-color: #2E2E33;
+}
+.slot-box.open {
+	border: 2px solid green;
+	background-color: #2E2E33;
+}
+.slot-box.dicht {
+	background-color: #2E2E33;
+}
+.slot-inhoud {
+	font-size: 1.2em;
+}
+body {
+    background-color: #1A1A1D;
+}
