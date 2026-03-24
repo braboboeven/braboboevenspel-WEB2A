@@ -1,0 +1,73 @@
+"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+type Query {
+  meGroep: Groep @field(resolver: "App\\GraphQL\\Queries\\GroepQuery@me")
+  opdrachten(big_boss: Boolean): [Opdracht!]! @field(resolver: "App\\GraphQL\\Queries\\OpdrachtQuery@all")
+  hints: [HintItem!]! @field(resolver: "App\\GraphQL\\Queries\\HintQuery@forGroup")
+  leaderboard: [LeaderboardEntry!]! @field(resolver: "App\\GraphQL\\Queries\\LeaderboardQuery@all")
+  spelSessie: SpelSessie @field(resolver: "App\\GraphQL\\Queries\\SpelSessieQuery@current")
+}
+
+type Mutation {
+  createGroep(naam: String!, klas: String): Groep @field(resolver: "App\\GraphQL\\Mutations\\GroepMutation@create")
+  joinGroep(code: String!): Groep @field(resolver: "App\\GraphQL\\Mutations\\GroepMutation@join")
+  submitQuery(opdracht_id: ID!, query: String!): QueryResult @field(resolver: "App\\GraphQL\\Mutations\\OpdrachtMutation@submit")
+  startSpel: SpelSessie @field(resolver: "App\\GraphQL\\Mutations\\DocentMutation@startSpel")
+  stopSpel: SpelSessie @field(resolver: "App\\GraphQL\\Mutations\\DocentMutation@stopSpel")
+  sendHint(type: String!, hint_id: ID!, broadcast: Boolean, groep_ids: [ID!]): Boolean
+    @field(resolver: "App\\GraphQL\\Mutations\\DocentMutation@sendHint")
+}
+
+type Groep {
+  id: ID!
+  naam: String!
+  klas: String
+  code: String!
+}
+
+type Opdracht {
+  id: ID!
+  code: String!
+  titel: String
+  prompt: String!
+  source_table: String!
+  verdachte_nummer: Int
+  step_nummer: Int
+  is_big_boss: Boolean!
+  reward_correct: Int!
+  reward_bad_format: Int!
+}
+
+type HintItem {
+  id: ID!
+  type: String!
+  hint_nummer: Int
+  beschrijving: String!
+  sent_at: DateTime
+}
+
+type LeaderboardEntry {
+  groep: Groep
+  score: Int!
+  big_boss_score: Int!
+  last_submission_at: DateTime
+}
+
+type SpelSessie {
+  id: ID!
+  status: String!
+  started_at: DateTime
+  paused_at: DateTime
+  ended_at: DateTime
+  total_paused_seconds: Int!
+}
+
+type QueryResult {
+  is_correct: Boolean!
+  is_good_format: Boolean!
+  earned: Int!
+  submitted_count: Int!
+  correct_count: Int!
+  correct_query: String!
+}
