@@ -26,7 +26,7 @@
 
         public function GetQuestions()
         {
-            $result = $this->conn->query("SELECT vraag_sleutel_id, vraag_tekst, correcte_query, verwacht_resultaat_aantal FROM Alle_Boeven_Database_Vragen ORDER BY vraag_sleutel_id ASC");
+            $result = $this->conn->query("SELECT id, vraag, juiste_antwoord, juiste_aantal_rijen FROM vragen ORDER BY id ASC");
             return $result->fetch_all(MYSQLI_ASSOC);
         }
 
