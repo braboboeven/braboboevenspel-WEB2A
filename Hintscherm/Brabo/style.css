@@ -1,0 +1,145 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Cutive Mono', monospace;
+    background-color: #1A1A1D;
+    color: #d1d1d1;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-size: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.hud {
+    background-color: #3F3F46;
+    padding: 15px 30px;
+    min-width: 100px;
+    width: 175px;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.vraag {
+    text-align: center;
+    max-width: 600px;
+    margin-bottom: 80px;
+}
+
+.antwoord {
+    display: flex;
+    width: 100%;
+    max-width: 500px;
+    height: 50px;
+    gap: 5px;
+}
+
+input[type="text"] {
+    flex-grow: 1;
+    background-color: #2E2E33;
+    border: none;
+    color: white;
+    padding: 10px;
+    font-family: inherit;
+    outline: none;
+}
+
+button {
+    background-color: #242429;
+    color: #d1d1d1;
+    border: none;
+    border-left: 2px solid #1A1A1D;
+    padding: 0 25px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #38383e;
+}
+
+.controls {
+    position: absolute;
+    bottom: 0rem;
+    right: 0rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.controls button {
+    background-color: #3F3F46;
+    padding: 0.75rem 1.5rem;
+    font-family: inherit;
+    cursor: pointer;
+    font-size: 1.5rem;
+}
+
+.hint-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.hint-modal-content {
+    background-color: #2E2E33;
+    padding: 40px;
+    border: 3px solid #00E676;
+    border-radius: 5px;
+    max-width: 500px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.3);
+}
+
+.hint-modal-content h2 {
+    color: #00E676;
+    margin-bottom: 20px;
+    font-size: 28px;
+    letter-spacing: 3px;
+}
+
+.hint-modal-content p {
+    color: #d1d1d1;
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+.hint-close {
+    color: #00E676;
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.hint-close:hover {
+    color: #00FF88;
+}
