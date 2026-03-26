@@ -1,0 +1,141 @@
+p,h1,h2,h3,div{
+    color: white;
+    font-family: "Cutive Mono", monospace;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.container_leaderboard_Student {
+    background-color: #2E2E33;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 16px;
+    min-height: 100vh;
+    width: 100vw;
+    box-sizing: border-box;
+}
+
+
+#naam_leaderboard_Student_Container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 20px 0 20px;
+}
+
+#naam_leaderboard_Student {
+    font-size: 1em;
+    background-color: #1A1A1D;
+    border: 1px solid white;
+    padding: 10px 40px;
+    text-align: center;
+}
+
+.nav-arrow {
+    width: 36px;
+    height: 36px;
+    background-color: #1A1A1D;
+    border: 1px solid white;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+#leaderboard_podium_container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 40px;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.leaderboard_podium {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    width: 140px;
+    background-color: #1A1A1D;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+
+.leaderboard_podium .avatar {
+    width: 100%;
+    aspect-ratio: 1;
+    background-color: #3a3a3f;
+    border: 1px solid #555;
+}
+
+#eerstePlek {
+    height: 200px;
+}
+
+#tweedePlek {
+    height: 160px;
+}
+
+#derdePlek {
+    height: 140px;
+}
+
+.tablerow_leaderboard_Student_Container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    box-sizing: border-box;
+}
+
+.tablerow_leaderboard_Student {
+    background-color: #1A1A1D;
+}
+
+.tablerow_leaderboard_Student > td {
+    vertical-align: middle;
+    text-align: center;
+    width: 33.33%;
+    padding: 12px 10px;
+}
+
+
+#pijltjeVerderDiv {
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 20px;
+    padding-bottom: 20px;
+}
+
+#pijltjeVerder {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: 2px solid white;
+    padding: 12px;
+    cursor: pointer;
+    background-color: #1A1A1D;
+}
+
+.categorie > div {
+    background-color: #1A1A1D;
+    border: white 1px solid;
+    padding: 10px;
+}
+
+.categorie {
+    display: flex;
+    justify-content: space-around;
+    flex-direction: row;
+}
