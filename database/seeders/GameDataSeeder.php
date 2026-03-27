@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use App\Actions\Game\OpdrachtParser;
 use App\Models\Opdracht;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class GameDataSeeder extends Seeder
 {
@@ -16,6 +16,7 @@ class GameDataSeeder extends Seeder
     {
         $this->seedBoevenData();
         $this->seedOpdrachten();
+        $this->seedBigBossOpdrachten();
     }
 
     private function seedBoevenData(): void
@@ -43,7 +44,7 @@ class GameDataSeeder extends Seeder
             return;
         }
 
-        $parser = new OpdrachtParser();
+        $parser = new OpdrachtParser;
 
         $verdachtePath = base_path('database/seeders/data/verdachte_opdrachten.sql');
         $misdaadPath = base_path('database/seeders/data/misdaad_opdrachten.sql');
@@ -56,6 +57,35 @@ class GameDataSeeder extends Seeder
         if ($opdrachten === []) {
             return;
         }
+
+        Opdracht::query()->upsert(
+            $opdrachten,
+            ['code'],
+            ['titel', 'prompt', 'correct_query', 'source_table', 'verdachte_nummer', 'step_nummer', 'is_big_boss', 'reward_correct', 'reward_bad_format']
+        );
+    }
+
+    private function seedBigBossOpdrachten(): void
+    {
+        $path = base_path('database/seeders/data/big_boss_opdrachten.sql');
+        if (! file_exists($path)) {
+            return;
+        }
+
+        $parser = new OpdrachtParser;
+        $opdrachten = $parser->parseFromFile($path, 'Misdaad', 'B');
+
+        if ($opdrachten === []) {
+            return;
+        }
+
+        $opdrachten = array_map(function (array $opdracht): array {
+            $opdracht['is_big_boss'] = true;
+            $opdracht['reward_correct'] = 10000;
+            $opdracht['reward_bad_format'] = 500;
+
+            return $opdracht;
+        }, $opdrachten);
 
         Opdracht::query()->upsert(
             $opdrachten,
