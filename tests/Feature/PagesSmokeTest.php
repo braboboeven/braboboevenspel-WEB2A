@@ -47,6 +47,9 @@ it('renders protected pages for verified docents', function () {
 
     $this->actingAs($user)->get('/spel')->assertOk();
     $this->actingAs($user)->get('/docent')->assertOk();
+    $this->actingAs($user)->get('/spelregels')->assertOk();
+    $this->actingAs($user)->get('/wacht')->assertOk();
+    $this->actingAs($user)->get('/leaderboard')->assertOk();
     $this->actingAs($user)->get('/graphiql')->assertOk();
     $this->actingAs($user)->get('/docs')->assertRedirect('/docs/api');
     $this->actingAs($user)->get('/admin')->assertOk();

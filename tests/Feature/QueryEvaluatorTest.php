@@ -8,7 +8,7 @@ it('rejects non-select queries', function () {
 
     $result = $evaluator->evaluate(
         'DELETE FROM Verdachte',
-        "SELECT naam FROM Verdachte WHERE verdachte_id = 1",
+        'SELECT naam FROM Verdachte WHERE verdachte_id = 1',
         1000,
         500
     );
@@ -62,4 +62,17 @@ it('scores correct queries without format bonus', function () {
     expect($result['is_correct'])->toBeTrue();
     expect($result['is_good_format'])->toBeFalse();
     expect($result['earned'])->toBe(500);
+});
+
+it('allows trailing semicolons on select queries', function () {
+    $evaluator = app(QueryEvaluator::class);
+
+    $result = $evaluator->evaluate(
+        'SELECT naam FROM Verdachte;',
+        'SELECT naam FROM Verdachte',
+        1000,
+        500
+    );
+
+    expect($result['is_safe'])->toBeTrue();
 });
