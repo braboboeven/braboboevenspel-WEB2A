@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\GroepController;
 use App\Http\Controllers\Api\V1\HintController;
 use App\Http\Controllers\Api\V1\LeaderboardController;
 use App\Http\Controllers\Api\V1\OpdrachtController;
+use App\Http\Controllers\Api\V1\SpelController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('v1')->group(function () {
@@ -17,8 +18,12 @@ Route::middleware(['auth'])->prefix('v1')->group(function () {
 
     Route::get('hints', [HintController::class, 'index']);
     Route::get('leaderboard', [LeaderboardController::class, 'index']);
+    Route::get('leaderboard/big-boss', [LeaderboardController::class, 'bigBoss']);
+    Route::get('spel/sessie', [SpelController::class, 'status']);
 
     Route::post('docent/spel/start', [DocentController::class, 'startSpel']);
     Route::post('docent/spel/stop', [DocentController::class, 'stopSpel']);
     Route::post('docent/hints', [DocentController::class, 'sendHint']);
+    Route::get('docent/groepen', [DocentController::class, 'groepen']);
+    Route::get('docent/hints/options', [DocentController::class, 'hintOptions']);
 });
