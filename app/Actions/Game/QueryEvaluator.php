@@ -14,7 +14,8 @@ class QueryEvaluator
      */
     public function evaluate(string $submittedQuery, string $correctQuery, int $rewardCorrect, int $rewardBadFormat): array
     {
-        $submittedQuery = trim($submittedQuery);
+        $submittedQuery = $this->normalizeQuery($submittedQuery);
+        $correctQuery = $this->normalizeQuery($correctQuery);
 
         if (! $this->isSafeSelect($submittedQuery)) {
             return [
@@ -77,9 +78,16 @@ class QueryEvaluator
         return true;
     }
 
+    private function normalizeQuery(string $query): string
+    {
+        $query = trim($query);
+
+        return rtrim($query, "; \t\n\r\0\x0B");
+    }
+
     /**
-     * @param array<int, object> $submittedRows
-     * @param array<int, object> $correctRows
+     * @param  array<int, object>  $submittedRows
+     * @param  array<int, object>  $correctRows
      */
     public function resultsMatch(array $submittedRows, array $correctRows): bool
     {
@@ -103,7 +111,7 @@ class QueryEvaluator
     }
 
     /**
-     * @param array<int, object> $rows
+     * @param  array<int, object>  $rows
      * @return array<int, array<string, mixed>>
      */
     private function normalizeRows(array $rows): array
