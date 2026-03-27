@@ -1,0 +1,4 @@
+[submodule "braboboevenspel-WEB2A"]
+	path = braboboevenspel-WEB2A
+	url = https://github.com/braboboeven/braboboevenspel-WEB2A
+	branch = dev/frontend-cherry
