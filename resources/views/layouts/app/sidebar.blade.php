@@ -18,6 +18,15 @@
                     <flux:sidebar.item icon="layout-grid" :href="route('spel')" :current="request()->routeIs('spel')" wire:navigate>
                         {{ __('Spel') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="book-open-text" :href="route('regels')" :current="request()->routeIs('regels')" wire:navigate>
+                        {{ __('Spelregels') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="trophy" :href="route('leaderboard')" :current="request()->routeIs('leaderboard')" wire:navigate>
+                        {{ __('Leaderboard') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="hourglass" :href="route('wacht')" :current="request()->routeIs('wacht')" wire:navigate>
+                        {{ __('Wacht') }}
+                    </flux:sidebar.item>
                     @if (auth()->user()?->is_docent)
                         <flux:sidebar.item icon="layout-grid" :href="route('docent')" :current="request()->routeIs('docent')" wire:navigate>
                             {{ __('Docent') }}
