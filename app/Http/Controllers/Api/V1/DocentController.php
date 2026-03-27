@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SendHintRequest;
 use App\Models\BigBossHint;
+use App\Models\Groep;
 use App\Models\Hint;
 use App\Models\HintVerzending;
 use App\Models\SpelSessie;
@@ -81,6 +82,53 @@ class DocentController extends Controller
         }
 
         return response()->json(['message' => 'Hint verstuurd.']);
+    }
+
+    public function groepen(): JsonResponse
+    {
+        $this->ensureDocent();
+
+        $groepen = Groep::query()
+            ->orderBy('naam')
+            ->get()
+            ->map(fn (Groep $groep) => [
+                'id' => $groep->id,
+                'naam' => $groep->naam,
+                'klas' => $groep->klas,
+                'code' => $groep->code,
+            ]);
+
+        return response()->json(['data' => $groepen]);
+    }
+
+    public function hintOptions(): JsonResponse
+    {
+        $this->ensureDocent();
+
+        $hints = Hint::query()
+            ->orderBy('hint_nummer')
+            ->get()
+            ->map(fn (Hint $hint) => [
+                'id' => $hint->hint_nummer,
+                'hint_nummer' => $hint->hint_nummer,
+                'beschrijving' => $hint->hint_beschrijving,
+            ]);
+
+        $bigBossHints = BigBossHint::query()
+            ->orderBy('nummer')
+            ->get()
+            ->map(fn (BigBossHint $hint) => [
+                'id' => $hint->id,
+                'nummer' => $hint->nummer,
+                'beschrijving' => $hint->beschrijving,
+            ]);
+
+        return response()->json([
+            'data' => [
+                'hints' => $hints,
+                'big_boss_hints' => $bigBossHints,
+            ],
+        ]);
     }
 
     private function ensureDocent(): void
