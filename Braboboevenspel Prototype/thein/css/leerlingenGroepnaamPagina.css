@@ -1,0 +1,64 @@
+body {
+    font-family: 'Cutive Mono', monospace;
+    background: #1A1A1D;
+    color: #fff;
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.titel {
+    background-color: #3F3F46;
+    color: white;
+    padding: 15px 10px;
+    margin-bottom: 1%;
+    border-radius: 4px;
+    font-size: 48px;
+    letter-spacing: 2px;
+}
+
+.uitleg {
+    color: #BFC0C0;
+    font-size: 20px;
+    letter-spacing: 2px;
+    margin-bottom: 10%;
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.naam-input {
+    background: #2E2E33;
+    color: #fff;
+    border: none;
+    outline: none;
+    font-size: 20px;
+    padding: 8px 15px;
+    width: 180px;
+    border-radius: 2px 0 0 2px;
+    font-family: 'Cutive Mono', monospace;
+    margin-right: 3px;
+}
+
+.submit-btn {
+    background: #2E2E33;
+    color: #fff;
+    border: none;
+    font-size: 22px;
+    padding: 6px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+   
+}
+
+.submit-btn:hover {
+    background: #3F3F46;
+}

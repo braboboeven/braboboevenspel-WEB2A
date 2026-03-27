@@ -1,0 +1,118 @@
+body {
+    font-family: 'Cutive Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background: #1A1A1D;
+}
+
+
+.titel {
+    background-color: #3F3F46;
+    color: white;
+    padding: 15px 10px;
+    margin-bottom: 5%;
+    border-radius: 4px;
+    font-size: 48px;
+    letter-spacing: 2px;
+}
+
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background-color: #242429;
+    padding: 20px 1px;
+    width: 260px;
+    align-items: center;
+    border: 3px solid #2F2F34;
+}
+
+
+.blokje1 {
+    background-color: #2E2E33;
+    color: #BFC0C0;
+    width: 220px;
+    height: 45px;
+    border: none;
+    outline: none;
+    text-align: center;
+    font-size: 16px;
+}
+
+.blokje1::placeholder {
+    color: #7C7C84;
+}
+
+
+.blokje2 {
+    background-color: #2E2E33;
+    width: 224px;
+    height: 45px;
+    color: white;
+    font-size: 18px;
+    font-family: 'Cutive Mono', monospace;
+    display: flex;
+    border: none;
+    outline: none;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.tooltip-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tooltip {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: #383838;
+    color: #ffffff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    opacity: 0.8;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 18px; 
+    transform: translateX(50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #383838;
+    border-bottom: none;
+}
+
+.circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #354D6C;
+    color: white;
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+a {
+    text-decoration: none;
+}
