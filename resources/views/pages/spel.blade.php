@@ -10,10 +10,11 @@ use App\Models\SpelSessie;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Spel')] class extends Component {
+new #[Title('Spel'), Layout('layouts.game')] class extends Component {
     public string $groepNaam = '';
     public string $groepKlas = '';
     public string $groepCode = '';
@@ -220,94 +221,146 @@ new #[Title('Spel')] class extends Component {
     }
 }; ?>
 
-<x-layouts::app :title="__('Spel')">
-    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl" wire:poll.1s>
-        <div class="flex flex-col gap-2">
-            <flux:heading size="lg">Spelstatus</flux:heading>
-            <flux:text>Timer: {{ $this->elapsedFormatted }}</flux:text>
-            <flux:text>Status: {{ $this->spelSessie?->status ?? 'onbekend' }}</flux:text>
-        </div>
-
+<div class="min-h-screen w-full bg-[#3f3f46] text-white" wire:poll.1s>
+    <div class="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 lg:px-8">
         @if (! $this->groep)
-            <div class="grid gap-6 lg:grid-cols-2">
-                <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
-                    <flux:heading size="md">Nieuwe groep</flux:heading>
-                    <form wire:submit="createGroep" class="mt-4 space-y-3">
-                        <flux:input wire:model="groepNaam" label="Groepsnaam" required />
-                        <flux:input wire:model="groepKlas" label="Klas (optioneel)" />
-                        <flux:button variant="primary" type="submit">Maak groep</flux:button>
+            <div class="flex flex-col items-center gap-8 text-center">
+                <div class="rounded-2xl bg-[#1a1a1d] px-8 py-4 text-3xl uppercase tracking-[0.25em]">
+                    brabo-boevenspel
+                </div>
+
+                <div class="grid w-full max-w-4xl gap-6 lg:grid-cols-2">
+                    <form wire:submit="joinGroep" class="rounded-2xl bg-[#2e2e33] p-6 text-left">
+                        <div class="text-xs uppercase tracking-[0.3em] text-zinc-400">Spel-code</div>
+                        <input
+                            wire:model="groepCode"
+                            class="mt-3 w-full rounded-xl border border-white/10 bg-white px-4 py-2 text-lg text-black"
+                            maxlength="8"
+                            placeholder="00000000"
+                            required
+                        />
+                        <button type="submit" class="mt-4 w-full rounded-xl bg-black px-4 py-2 text-sm uppercase tracking-[0.3em]">
+                            start
+                        </button>
+                    </form>
+
+                    <form wire:submit="createGroep" class="rounded-2xl bg-[#2e2e33] p-6 text-left">
+                        <div class="text-xs uppercase tracking-[0.3em] text-zinc-400">Teamnaam</div>
+                        <input
+                            wire:model="groepNaam"
+                            class="mt-3 w-full rounded-xl border border-white/10 bg-white px-4 py-2 text-lg text-black"
+                            placeholder="Naam"
+                            required
+                        />
+                        <div class="mt-4 text-xs uppercase tracking-[0.3em] text-zinc-400">Klas (optioneel)</div>
+                        <input
+                            wire:model="groepKlas"
+                            class="mt-3 w-full rounded-xl border border-white/10 bg-white px-4 py-2 text-lg text-black"
+                            placeholder="Klas"
+                        />
+                        <button type="submit" class="mt-4 w-full rounded-xl bg-black px-4 py-2 text-sm uppercase tracking-[0.3em]">
+                            maak groep
+                        </button>
                     </form>
                 </div>
 
-                <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
-                    <flux:heading size="md">Sluit aan bij groep</flux:heading>
-                    <form wire:submit="joinGroep" class="mt-4 space-y-3">
-                        <flux:input wire:model="groepCode" label="Groepcode" required />
-                        <flux:button variant="primary" type="submit">Aansluiten</flux:button>
-                    </form>
-                </div>
+                @if ($resultMessage)
+                    <div class="rounded-xl border border-white/20 px-4 py-3 text-sm">
+                        {{ $resultMessage }}
+                    </div>
+                @endif
             </div>
         @else
-            <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
-                <flux:heading size="md">Groep</flux:heading>
-                <flux:text>Naam: {{ $this->groep->naam }} ({{ $this->groep->code }})</flux:text>
-                <flux:text>Klas: {{ $this->groep->klas ?? '-' }}</flux:text>
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="rounded-xl bg-[#1a1a1d] px-6 py-3 text-lg tracking-[0.4em]">
+                    {{ $this->groep->code }}
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="rounded-xl bg-[#1a1a1d] px-6 py-3 text-lg">
+                        {{ $this->elapsedFormatted }}
+                    </div>
+                    <div class="rounded-xl bg-[#1a1a1d] px-6 py-3 text-lg">
+                        {{ $this->selectedOpdracht?->code ?? '0' }}/{{ $this->opdrachten->count() }}
+                    </div>
+                </div>
             </div>
 
-            <div class="grid gap-6 lg:grid-cols-2">
-                <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
-                    <flux:heading size="md">Query insturen</flux:heading>
-                    <form wire:submit="submitQuery" class="mt-4 space-y-3">
-                        <label class="text-sm font-medium">Opdracht</label>
-                        <select wire:model="selectedOpdrachtId" class="w-full rounded-md border border-neutral-300 bg-white p-2 text-sm dark:border-neutral-600 dark:bg-neutral-900">
-                            <option value="">Selecteer opdracht</option>
-                            @foreach ($this->opdrachten as $opdracht)
-                                <option value="{{ $opdracht->id }}">
-                                    {{ $opdracht->code }}{{ $opdracht->is_big_boss ? ' (Big Boss)' : '' }}
-                                </option>
-                            @endforeach
-                        </select>
+            <div class="grid gap-6 lg:grid-cols-[1fr_320px]">
+                <div class="rounded-2xl bg-[#2e2e33] p-6">
+                    <div class="text-lg text-zinc-200">
+                        {{ $this->selectedOpdracht?->prompt ?? '-- De verdachte komt een gebouw uit. Het is een vrouw' }}
+                    </div>
 
-                        @if ($this->selectedOpdracht)
-                            <div class="rounded-md border border-neutral-200 p-2 text-sm dark:border-neutral-700">
-                                {{ $this->selectedOpdracht->prompt }}
-                            </div>
-                        @endif
+                    <form wire:submit="submitQuery" class="mt-6 grid gap-4">
+                        <div>
+                            <label class="text-xs uppercase tracking-[0.3em] text-zinc-400">Opdracht</label>
+                            <select wire:model="selectedOpdrachtId" class="mt-2 w-full rounded-xl border border-white/10 bg-[#1a1a1d] px-3 py-2 text-sm text-white">
+                                <option value="">Selecteer opdracht</option>
+                                @foreach ($this->opdrachten as $opdracht)
+                                    <option value="{{ $opdracht->id }}">
+                                        {{ $opdracht->code }}{{ $opdracht->is_big_boss ? ' (Big Boss)' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                        <flux:textarea wire:model="submittedQuery" label="Query" rows="6" required />
-                        <flux:button variant="primary" type="submit">Verstuur query</flux:button>
+                        <div class="rounded-xl bg-[#1a1a1d] p-4">
+                            <textarea
+                                wire:model="submittedQuery"
+                                rows="5"
+                                class="h-28 w-full resize-none bg-transparent text-center text-lg text-white outline-none"
+                                placeholder="Antwoord"
+                                required
+                            ></textarea>
+                        </div>
+
+                        <button type="submit" class="rounded-xl bg-black px-4 py-2 text-sm uppercase tracking-[0.3em]">
+                            controleer
+                        </button>
                     </form>
 
-                    @if ($resultMessage)
-                        <flux:text class="mt-4">{{ $resultMessage }}</flux:text>
-                    @endif
+                    @php
+                        $feedbackBorder = 'border-white/10';
+                        if ($resultMessage) {
+                            $feedbackBorder = str_contains($resultMessage, 'Goed')
+                                ? 'border-emerald-400/70'
+                                : 'border-red-400/70';
+                        }
+                    @endphp
 
-                    @if ($correctQuery)
-                        <div class="mt-4 rounded-md bg-neutral-100 p-3 text-sm text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200">
-                            <div class="font-semibold">Juiste query</div>
-                            <pre class="mt-2 whitespace-pre-wrap">{{ $correctQuery }}</pre>
+                    @if ($resultMessage || $correctQuery)
+                        <div class="mt-6 rounded-xl border {{ $feedbackBorder }} bg-[#1a1a1d] p-4 text-sm">
+                            @if ($resultMessage)
+                                <div class="text-lg">{{ $resultMessage }}</div>
+                            @endif
+                            @if ($correctQuery)
+                                <div class="mt-3 text-xs uppercase tracking-[0.2em] text-zinc-400">Juiste query</div>
+                                <pre class="mt-2 whitespace-pre-wrap text-sm">{{ $correctQuery }}</pre>
+                            @endif
                         </div>
                     @endif
                 </div>
 
-                <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
-                    <flux:heading size="md">Hints</flux:heading>
+                <aside class="rounded-2xl bg-[#1a1a1d] p-4">
+                    <div class="text-xs uppercase tracking-[0.3em] text-zinc-400">Hints</div>
                     <div class="mt-4 space-y-3">
                         @forelse ($this->ontvangenHints as $hint)
-                            <div class="rounded-md border border-neutral-200 p-3 text-sm dark:border-neutral-700">
+                            <div class="rounded-xl border border-white/10 bg-[#2e2e33] p-3 text-sm">
                                 <div class="font-semibold">
                                     {{ $hint->hint?->hint_beschrijving ?? 'Big Boss hint' }}
                                 </div>
                                 @if ($hint->bigBossHint)
-                                    <div class="text-xs text-neutral-500">{{ $hint->bigBossHint->beschrijving }}</div>
+                                    <div class="text-xs text-zinc-400">{{ $hint->bigBossHint->beschrijving }}</div>
                                 @endif
                             </div>
                         @empty
-                            <flux:text>Er zijn nog geen hints verstuurd.</flux:text>
+                            <div class="rounded-xl border border-white/10 px-3 py-2 text-sm text-zinc-400">
+                                Er zijn nog geen hints verstuurd.
+                            </div>
                         @endforelse
                     </div>
-                </div>
+                </aside>
             </div>
         @endif
     </div>
-</x-layouts::app>
+</div>
