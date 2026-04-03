@@ -198,9 +198,9 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
 }; ?>
 
 <div class="game-shell" wire:poll.1s="$refresh">
-    <div class="game-container">
-        <div class="grid gap-6 lg:grid-cols-[320px_1fr_280px]">
-            <section class="game-card-soft">
+    <div class="game-container lg:h-[calc(100vh-7.5rem)] lg:overflow-hidden">
+        <div class="grid gap-6 lg:h-full lg:grid-cols-[320px_1fr_280px]">
+            <section class="game-card-soft lg:h-full lg:overflow-y-auto">
                 <div class="text-sm uppercase tracking-[0.35em] text-zinc-200">Leader board</div>
                 <div class="mt-4 space-y-2">
                     @forelse ($this->leaderboard as $entry)
@@ -222,7 +222,7 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
                     @endforelse
                 </div>
 
-                <div class="mt-6 text-xs uppercase tracking-[0.3em] text-zinc-400">Bank per verdachte</div>
+                <div class="mt-4 text-xs uppercase tracking-[0.3em] text-zinc-400">Bank per verdachte</div>
                 <div class="mt-3 max-h-64 space-y-2 overflow-y-auto">
                     @forelse ($this->bankOverzicht as $bank)
                         <div class="rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs">
@@ -237,7 +237,7 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
                 </div>
             </section>
 
-            <section class="game-card">
+            <section class="game-card lg:h-full lg:overflow-y-auto">
                 <div class="flex items-center justify-between">
                     <button type="button" class="game-btn flex h-12 w-12 items-center justify-center text-white/80">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -252,7 +252,7 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
                     </button>
                 </div>
 
-                <div class="mt-6 rounded-xl border border-white/10 bg-zinc-900 p-6 text-center text-lg">
+                <div class="mt-4 rounded-xl border border-white/10 bg-zinc-900 p-6 text-center text-lg">
                     @php
                         $selectedHint = $hintType === 'normal'
                             ? $this->hints->firstWhere('hint_nummer', $selectedHintId)
@@ -269,11 +269,11 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
                     @endif
                 </div>
 
-                <div class="mt-4 rounded-xl border border-white/20 bg-zinc-900 px-4 py-6 text-center text-xl">
+                <div class="mt-3 rounded-xl border border-white/20 bg-zinc-900 px-4 py-4 text-center text-xl">
                     {{ $statusMessage ?? 'Goed antwoord' }}
                 </div>
 
-                <form wire:submit="sendHint" class="mt-6 grid gap-4">
+                <form wire:submit="sendHint" class="mt-4 grid gap-4">
                     <div>
                         <label class="text-xs uppercase tracking-[0.2em] text-zinc-400">Type hint</label>
                         <select wire:model="hintType" class="game-input mt-2">
@@ -319,7 +319,7 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
                     </button>
                 </form>
 
-                <form class="mt-6 grid gap-4 border-t border-white/10 pt-6">
+                <form class="mt-4 grid gap-4 border-t border-white/10 pt-4">
                     <div class="text-xs uppercase tracking-[0.2em] text-zinc-400">Bankbeheer verdachte</div>
                     <div>
                         <label class="text-xs uppercase tracking-[0.2em] text-zinc-400">Groep</label>
@@ -341,7 +341,7 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
                 </form>
             </section>
 
-            <aside class="game-card-soft">
+            <aside class="game-card-soft lg:h-full lg:overflow-y-auto">
                 <div class="game-panel bg-black text-center text-2xl">
                     {{ $this->elapsedFormatted }}
                 </div>
