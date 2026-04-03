@@ -1,9 +1,11 @@
 <?php
 
-use App\Actions\Game\ResetGameState;
+use App\Actions\Game\ManageVerdachteBank;
+use App\Actions\Game\FinalizeGameSession;
 use App\Models\BigBossHint;
 use App\Models\Groep;
 use App\Models\GroepScore;
+use App\Models\GroepVerdachteBank;
 use App\Models\Hint;
 use App\Models\HintVerzending;
 use App\Models\SpelSessie;
@@ -18,6 +20,8 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
     public ?int $selectedHintId = null;
     public array $selectedGroepen = [];
     public bool $broadcast = true;
+    public ?int $bankGroepId = null;
+    public ?int $verdachteNummer = null;
     public ?string $statusMessage = null;
 
     public function mount(): void
@@ -66,17 +70,44 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
         $this->statusMessage = 'Spel hervat.';
     }
 
-    public function endSpel(ResetGameState $resetGameState): void
+    public function endSpel(FinalizeGameSession $finalizeGameSession): void
     {
         $sessie = SpelSessie::query()->latest()->first();
+        $winner = $finalizeGameSession($sessie, true);
 
-        if ($sessie) {
-            $sessie->endGame();
-        }
+        $this->statusMessage = $winner['group_name']
+            ? 'Spel beëindigd. Winnaar: '.$winner['group_name'].' ($'.$winner['total_score'].').'
+            : 'Spel beëindigd en groepen opgeschoond.';
+    }
 
-        $resetGameState();
+    public function bankeerVerdachte(ManageVerdachteBank $manageVerdachteBank): void
+    {
+        $validated = $this->validate([
+            'bankGroepId' => ['required', 'integer', 'exists:groeps,id'],
+            'verdachteNummer' => ['required', 'integer', 'min:1'],
+        ]);
 
-        $this->statusMessage = 'Spel beëindigd en groepen opgeschoond.';
+        $result = $manageVerdachteBank->bankeer(
+            (int) $validated['bankGroepId'],
+            (int) $validated['verdachteNummer']
+        );
+
+        $this->statusMessage = $result['message'].' (+$'.$result['amount'].')';
+    }
+
+    public function confisqueerVerdachte(ManageVerdachteBank $manageVerdachteBank): void
+    {
+        $validated = $this->validate([
+            'bankGroepId' => ['required', 'integer', 'exists:groeps,id'],
+            'verdachteNummer' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $result = $manageVerdachteBank->confisqueer(
+            (int) $validated['bankGroepId'],
+            (int) $validated['verdachteNummer']
+        );
+
+        $this->statusMessage = $result['message'].' (-$'.$result['amount'].')';
     }
 
     public function sendHint(): void
@@ -134,8 +165,17 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
     public function leaderboard()
     {
         return GroepScore::query()
-            ->with('groep')
+            ->with('groep.verdachteBanken')
             ->orderByDesc('score')
+            ->get();
+    }
+
+    #[Computed]
+    public function bankOverzicht()
+    {
+        return GroepVerdachteBank::query()
+            ->with('groep')
+            ->orderByDesc('banked_amount')
             ->get();
     }
 
@@ -157,14 +197,14 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
     }
 }; ?>
 
-<div class="min-h-screen w-full bg-[#1a1a1d] text-white" wire:poll.1s="$refresh">
-    <div class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 lg:px-8">
-        <div class="grid gap-6 lg:grid-cols-[280px_1fr_220px]">
-            <section class="rounded-2xl bg-[#2e2e33] p-4">
-                <div class="text-lg uppercase tracking-[0.35em] text-zinc-200">Leader board</div>
+<div class="game-shell" wire:poll.1s="$refresh">
+    <div class="game-container">
+        <div class="grid gap-6 lg:grid-cols-[320px_1fr_280px]">
+            <section class="game-card-soft">
+                <div class="text-sm uppercase tracking-[0.35em] text-zinc-200">Leader board</div>
                 <div class="mt-4 space-y-2">
                     @forelse ($this->leaderboard as $entry)
-                        <div class="flex items-center justify-between rounded-xl bg-[#1a1a1d] px-3 py-2 text-sm">
+                        <div class="flex items-center justify-between rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm">
                             <div>
                                 <div class="font-semibold">{{ $entry->groep?->naam ?? 'Onbekend' }}</div>
                                 <div class="text-xs text-zinc-400">{{ $entry->groep?->klas ?? '-' }}</div>
@@ -172,6 +212,7 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
                             <div class="text-right">
                                 <div class="text-base font-semibold">${{ $entry->score }}</div>
                                 <div class="text-xs text-zinc-400">Big Boss: ${{ $entry->big_boss_score }}</div>
+                                <div class="text-xs text-zinc-400">Bank: ${{ $entry->groep?->verdachteBanken?->sum('banked_amount') ?? 0 }}</div>
                             </div>
                         </div>
                     @empty
@@ -180,24 +221,38 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
                         </div>
                     @endforelse
                 </div>
+
+                <div class="mt-6 text-xs uppercase tracking-[0.3em] text-zinc-400">Bank per verdachte</div>
+                <div class="mt-3 max-h-64 space-y-2 overflow-y-auto">
+                    @forelse ($this->bankOverzicht as $bank)
+                        <div class="rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs">
+                            <div class="font-semibold">{{ $bank->groep?->naam ?? 'Onbekend' }} · Verdachte {{ $bank->verdachte_nummer }}</div>
+                            <div class="text-zinc-400">Op bank: ${{ $bank->banked_amount }} · In beslag: ${{ $bank->confiscated_amount }}</div>
+                        </div>
+                    @empty
+                        <div class="rounded-xl border border-white/10 px-3 py-2 text-sm text-zinc-400">
+                            Nog geen bankrecords.
+                        </div>
+                    @endforelse
+                </div>
             </section>
 
-            <section class="rounded-2xl bg-[#242429] p-6">
+            <section class="game-card">
                 <div class="flex items-center justify-between">
-                    <button type="button" class="flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 text-white/80">
+                    <button type="button" class="game-btn flex h-12 w-12 items-center justify-center text-white/80">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M15 18l-6-6 6-6" />
                         </svg>
                     </button>
-                    <div class="rounded-xl border border-white/20 px-6 py-2 text-xl">Groep</div>
-                    <button type="button" class="flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 text-white/80">
+                    <div class="game-panel text-xl">Groep</div>
+                    <button type="button" class="game-btn flex h-12 w-12 items-center justify-center text-white/80">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M9 6l6 6-6 6" />
                         </svg>
                     </button>
                 </div>
 
-                <div class="mt-6 rounded-xl border border-white/10 p-6 text-center text-lg">
+                <div class="mt-6 rounded-xl border border-white/10 bg-zinc-900 p-6 text-center text-lg">
                     @php
                         $selectedHint = $hintType === 'normal'
                             ? $this->hints->firstWhere('hint_nummer', $selectedHintId)
@@ -214,14 +269,14 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
                     @endif
                 </div>
 
-                <div class="mt-4 rounded-xl border border-white/20 px-4 py-6 text-center text-xl">
+                <div class="mt-4 rounded-xl border border-white/20 bg-zinc-900 px-4 py-6 text-center text-xl">
                     {{ $statusMessage ?? 'Goed antwoord' }}
                 </div>
 
                 <form wire:submit="sendHint" class="mt-6 grid gap-4">
                     <div>
                         <label class="text-xs uppercase tracking-[0.2em] text-zinc-400">Type hint</label>
-                        <select wire:model="hintType" class="mt-2 w-full rounded-xl border border-white/10 bg-[#1a1a1d] px-3 py-2 text-sm text-white">
+                        <select wire:model="hintType" class="game-input mt-2">
                             <option value="normal">Normale hint</option>
                             <option value="bigboss">Big Boss hint</option>
                         </select>
@@ -229,7 +284,7 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
 
                     <div>
                         <label class="text-xs uppercase tracking-[0.2em] text-zinc-400">Hint</label>
-                        <select wire:model="selectedHintId" class="mt-2 w-full rounded-xl border border-white/10 bg-[#1a1a1d] px-3 py-2 text-sm text-white">
+                        <select wire:model="selectedHintId" class="game-input mt-2">
                             <option value="">Selecteer hint</option>
                             @if ($hintType === 'normal')
                                 @foreach ($this->hints as $hint)
@@ -244,48 +299,74 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
                     </div>
 
                     <label class="flex items-center gap-2 text-sm text-zinc-300">
-                        <input type="checkbox" wire:model="broadcast" class="rounded border-white/20 bg-[#1a1a1d] text-emerald-400" />
+                        <input type="checkbox" wire:model="broadcast" class="rounded border-white/20 bg-zinc-900 text-emerald-400" />
                         Verstuur naar alle groepen
                     </label>
 
                     @if (! $broadcast)
-                        <div class="max-h-40 overflow-y-auto rounded-xl border border-white/10 p-3 text-sm text-zinc-300">
+                        <div class="max-h-40 overflow-y-auto rounded-xl border border-white/10 bg-zinc-900 p-3 text-sm text-zinc-300">
                             @foreach ($this->groepen as $groep)
                                 <label class="flex items-center gap-2 py-1">
-                                    <input type="checkbox" value="{{ $groep->id }}" wire:model="selectedGroepen" class="rounded border-white/20 bg-[#1a1a1d] text-emerald-400" />
+                                    <input type="checkbox" value="{{ $groep->id }}" wire:model="selectedGroepen" class="rounded border-white/20 bg-zinc-900 text-emerald-400" />
                                     {{ $groep->naam }} ({{ $groep->code }})
                                 </label>
                             @endforeach
                         </div>
                     @endif
 
-                    <button type="submit" class="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#1a1a1d]">
+                    <button type="submit" class="game-btn-primary">
                         Verstuur hint
                     </button>
                 </form>
+
+                <form class="mt-6 grid gap-4 border-t border-white/10 pt-6">
+                    <div class="text-xs uppercase tracking-[0.2em] text-zinc-400">Bankbeheer verdachte</div>
+                    <div>
+                        <label class="text-xs uppercase tracking-[0.2em] text-zinc-400">Groep</label>
+                        <select wire:model="bankGroepId" class="game-input mt-2">
+                            <option value="">Selecteer groep</option>
+                            @foreach ($this->groepen as $groep)
+                                <option value="{{ $groep->id }}">{{ $groep->naam }} ({{ $groep->code }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs uppercase tracking-[0.2em] text-zinc-400">Verdachte nummer</label>
+                        <input type="number" min="1" wire:model="verdachteNummer" class="game-input mt-2" placeholder="Bijv. 3" />
+                    </div>
+                    <div class="grid gap-2 sm:grid-cols-2">
+                        <button type="button" wire:click="bankeerVerdachte" class="game-btn-primary">Zet op bank</button>
+                        <button type="button" wire:click="confisqueerVerdachte" class="game-btn">Confisqueer bij lek</button>
+                    </div>
+                </form>
             </section>
 
-            <aside class="rounded-2xl bg-[#2e2e33] p-4">
-                <div class="rounded-xl bg-black px-4 py-3 text-center text-2xl">
+            <aside class="game-card-soft">
+                <div class="game-panel bg-black text-center text-2xl">
                     {{ $this->elapsedFormatted }}
                 </div>
                 <div class="mt-4 grid gap-2">
-                    <button wire:click="startSpel" class="rounded-xl border border-white/10 bg-[#1a1a1d] px-4 py-2 text-sm">
+                    <button wire:click="startSpel" class="game-btn">
                         Start spel
                     </button>
-                    <button wire:click="pauseSpel" class="rounded-xl border border-white/10 bg-[#1a1a1d] px-4 py-2 text-sm">
+                    <button wire:click="pauseSpel" class="game-btn">
                         Pauzeer spel
                     </button>
-                    <button wire:click="resumeSpel" class="rounded-xl border border-white/10 bg-[#1a1a1d] px-4 py-2 text-sm">
+                    <button wire:click="resumeSpel" class="game-btn">
                         Hervat spel
                     </button>
-                    <button wire:click="endSpel" class="rounded-xl border border-white/10 bg-[#1a1a1d] px-4 py-2 text-sm">
+                    <button wire:click="endSpel" class="game-btn">
                         Eindig spel
                     </button>
                 </div>
                 <div class="mt-3 text-xs uppercase tracking-[0.2em] text-zinc-400">
                     Status: {{ $this->sessie?->status ?? 'onbekend' }}
                 </div>
+                @if ($this->sessie?->winner_group_name)
+                    <div class="mt-3 rounded-xl border border-emerald-400/40 bg-zinc-900 px-3 py-2 text-sm">
+                        Winnaar: {{ $this->sessie->winner_group_name }} (${{ $this->sessie->winner_total_score }})
+                    </div>
+                @endif
             </aside>
         </div>
     </div>

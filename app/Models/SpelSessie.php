@@ -25,6 +25,9 @@ class SpelSessie extends Model
         'ended_at',
         'total_paused_seconds',
         'created_by_user_id',
+        'winner_group_name',
+        'winner_total_score',
+        'winner_declared_at',
     ];
 
     /**
@@ -38,6 +41,7 @@ class SpelSessie extends Model
             'started_at' => 'datetime',
             'paused_at' => 'datetime',
             'ended_at' => 'datetime',
+            'winner_declared_at' => 'datetime',
         ];
     }
 

@@ -17,6 +17,16 @@ type Mutation {
   stopSpel: SpelSessie @field(resolver: "App\\GraphQL\\Mutations\\DocentMutation@stopSpel")
   sendHint(type: String!, hint_id: ID!, broadcast: Boolean, groep_ids: [ID!]): Boolean
     @field(resolver: "App\\GraphQL\\Mutations\\DocentMutation@sendHint")
+  bankVerdachte(groep_id: ID!, verdachte_nummer: Int!): BankActionResult!
+    @field(resolver: "App\\GraphQL\\Mutations\\DocentMutation@bankVerdachte")
+  confisqueerVerdachte(groep_id: ID!, verdachte_nummer: Int!): BankActionResult!
+    @field(resolver: "App\\GraphQL\\Mutations\\DocentMutation@confisqueerVerdachte")
+}
+
+type BankActionResult {
+  changed: Boolean!
+  amount: Int!
+  message: String!
 }
 
 type Groep {
@@ -61,6 +71,9 @@ type SpelSessie {
   paused_at: DateTime
   ended_at: DateTime
   total_paused_seconds: Int!
+  winner_group_name: String
+  winner_total_score: Int
+  winner_declared_at: DateTime
 }
 
 type QueryResult {

@@ -26,6 +26,9 @@ class SpelController extends Controller
                 'total_paused_seconds' => $sessie->total_paused_seconds,
                 'elapsed_seconds' => $sessie->elapsedSeconds(),
                 'elapsed_formatted' => $sessie->elapsedFormatted(),
+                'winner_group_name' => $sessie->winner_group_name,
+                'winner_total_score' => $sessie->winner_total_score,
+                'winner_declared_at' => optional($sessie->winner_declared_at)->toDateTimeString(),
             ],
         ]);
     }

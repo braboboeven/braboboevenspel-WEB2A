@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\GroepFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Groep extends Model
 {
-    /** @use HasFactory<\Database\Factories\GroepFactory> */
+    /** @use HasFactory<GroepFactory> */
     use HasFactory;
 
     /**
@@ -44,5 +45,10 @@ class Groep extends Model
     public function score(): HasOne
     {
         return $this->hasOne(GroepScore::class);
+    }
+
+    public function verdachteBanken(): HasMany
+    {
+        return $this->hasMany(GroepVerdachteBank::class);
     }
 }

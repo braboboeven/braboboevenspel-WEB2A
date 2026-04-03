@@ -174,7 +174,7 @@ new #[Title('Spel'), Layout('layouts.game')] class extends Component {
         );
 
         if ($opdracht->is_big_boss) {
-            $score->big_boss_score += $earned;
+            $score->big_boss_score = min(10000, $score->big_boss_score + $earned);
         } else {
             $score->score += $earned;
         }
@@ -262,6 +262,12 @@ new #[Title('Spel'), Layout('layouts.game')] class extends Component {
 
 <div class="game-shell" wire:poll.1s="$refresh">
     <div class="game-container max-w-6xl gap-8">
+        @if ($this->spelSessie?->status === 'stopped' && $this->spelSessie?->winner_group_name)
+            <div class="rounded-xl border border-emerald-400/40 bg-zinc-900 px-4 py-3 text-sm text-emerald-200">
+                Winnaar: {{ $this->spelSessie->winner_group_name }} met ${{ $this->spelSessie->winner_total_score }}.
+            </div>
+        @endif
+
         @if (! $this->groep)
             <div class="flex flex-col items-center gap-8 text-center">
                 <div class="rounded-2xl bg-zinc-900 px-8 py-4 text-3xl uppercase tracking-[0.25em]">

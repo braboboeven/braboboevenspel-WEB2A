@@ -112,7 +112,7 @@ class OpdrachtController extends Controller
         );
 
         if ($opdracht->is_big_boss) {
-            $score->big_boss_score += $earned;
+            $score->big_boss_score = min(10000, $score->big_boss_score + $earned);
         } else {
             $score->score += $earned;
         }

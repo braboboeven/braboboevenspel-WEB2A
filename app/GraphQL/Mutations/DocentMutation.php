@@ -2,7 +2,8 @@
 
 namespace App\GraphQL\Mutations;
 
-use App\Actions\Game\ResetGameState;
+use App\Actions\Game\FinalizeGameSession;
+use App\Actions\Game\ManageVerdachteBank;
 use App\Models\BigBossHint;
 use App\Models\Hint;
 use App\Models\HintVerzending;
@@ -22,7 +23,7 @@ class DocentMutation
         ]);
     }
 
-    public function stopSpel(ResetGameState $resetGameState): SpelSessie
+    public function stopSpel(FinalizeGameSession $finalizeGameSession): SpelSessie
     {
         $this->ensureDocent();
 
@@ -31,8 +32,7 @@ class DocentMutation
             abort(404, 'Geen sessie gevonden.');
         }
 
-        $sessie->endGame();
-        $resetGameState();
+        $finalizeGameSession($sessie, true);
 
         return $sessie;
     }
@@ -74,6 +74,26 @@ class DocentMutation
         }
 
         return true;
+    }
+
+    /**
+     * @return array{changed: bool, amount: int, message: string}
+     */
+    public function bankVerdachte(?object $root, array $args, ManageVerdachteBank $manageVerdachteBank): array
+    {
+        $this->ensureDocent();
+
+        return $manageVerdachteBank->bankeer((int) $args['groep_id'], (int) $args['verdachte_nummer']);
+    }
+
+    /**
+     * @return array{changed: bool, amount: int, message: string}
+     */
+    public function confisqueerVerdachte(?object $root, array $args, ManageVerdachteBank $manageVerdachteBank): array
+    {
+        $this->ensureDocent();
+
+        return $manageVerdachteBank->confisqueer((int) $args['groep_id'], (int) $args['verdachte_nummer']);
     }
 
     private function ensureDocent(): void

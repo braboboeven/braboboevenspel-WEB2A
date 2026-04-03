@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Actions\Game\ResetGameState;
+use App\Actions\Game\FinalizeGameSession;
+use App\Actions\Game\ManageVerdachteBank;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BankVerdachteRequest;
+use App\Http\Requests\ConfiscateVerdachteRequest;
 use App\Http\Requests\SendHintRequest;
 use App\Models\BigBossHint;
 use App\Models\Groep;
@@ -28,9 +31,9 @@ class DocentController extends Controller
         return response()->json(['data' => ['id' => $sessie->id, 'status' => $sessie->status]]);
     }
 
-    public function stopSpel(ResetGameState $resetGameState): JsonResponse
+    public function stopSpel(FinalizeGameSession $finalizeGameSession): JsonResponse
     {
-        return $this->endSpel($resetGameState);
+        return $this->endSpel($finalizeGameSession);
     }
 
     public function pauseSpel(): JsonResponse
@@ -63,22 +66,19 @@ class DocentController extends Controller
         return response()->json(['data' => ['id' => $sessie->id, 'status' => $sessie->status]]);
     }
 
-    public function endSpel(ResetGameState $resetGameState): JsonResponse
+    public function endSpel(FinalizeGameSession $finalizeGameSession): JsonResponse
     {
         $this->ensureDocent();
 
         $sessie = SpelSessie::query()->latest()->first();
-
-        if ($sessie) {
-            $sessie->endGame();
-        }
-
-        $resetGameState();
+        $winner = $finalizeGameSession($sessie, true);
 
         return response()->json([
             'data' => [
                 'id' => $sessie?->id,
                 'status' => 'stopped',
+                'winner_group_name' => $winner['group_name'],
+                'winner_total_score' => $winner['total_score'],
             ],
         ]);
     }
@@ -127,6 +127,7 @@ class DocentController extends Controller
         $this->ensureDocent();
 
         $groepen = Groep::query()
+            ->with(['score', 'verdachteBanken'])
             ->orderBy('naam')
             ->get()
             ->map(fn (Groep $groep) => [
@@ -134,9 +135,52 @@ class DocentController extends Controller
                 'naam' => $groep->naam,
                 'klas' => $groep->klas,
                 'code' => $groep->code,
+                'score' => (int) ($groep->score?->score ?? 0),
+                'big_boss_score' => (int) ($groep->score?->big_boss_score ?? 0),
+                'bank_balance' => (int) $groep->verdachteBanken->sum('banked_amount'),
             ]);
 
         return response()->json(['data' => $groepen]);
+    }
+
+    public function bankVerdachte(BankVerdachteRequest $request, ManageVerdachteBank $manageVerdachteBank): JsonResponse
+    {
+        $this->ensureDocent();
+
+        $validated = $request->validated();
+
+        $result = $manageVerdachteBank->bankeer(
+            (int) $validated['groep_id'],
+            (int) $validated['verdachte_nummer']
+        );
+
+        return response()->json([
+            'message' => $result['message'],
+            'data' => [
+                'changed' => $result['changed'],
+                'amount' => $result['amount'],
+            ],
+        ]);
+    }
+
+    public function confisqueerVerdachte(ConfiscateVerdachteRequest $request, ManageVerdachteBank $manageVerdachteBank): JsonResponse
+    {
+        $this->ensureDocent();
+
+        $validated = $request->validated();
+
+        $result = $manageVerdachteBank->confisqueer(
+            (int) $validated['groep_id'],
+            (int) $validated['verdachte_nummer']
+        );
+
+        return response()->json([
+            'message' => $result['message'],
+            'data' => [
+                'changed' => $result['changed'],
+                'amount' => $result['amount'],
+            ],
+        ]);
     }
 
     public function hintOptions(): JsonResponse

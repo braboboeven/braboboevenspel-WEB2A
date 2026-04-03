@@ -26,6 +26,8 @@ Route::middleware(['auth'])->prefix('v1')->group(function () {
     Route::post('docent/spel/resume', [DocentController::class, 'resumeSpel']);
     Route::post('docent/spel/end', [DocentController::class, 'endSpel']);
     Route::post('docent/spel/stop', [DocentController::class, 'stopSpel']);
+    Route::post('docent/bank/verdachte', [DocentController::class, 'bankVerdachte']);
+    Route::post('docent/bank/confisqueer', [DocentController::class, 'confisqueerVerdachte']);
     Route::post('docent/hints', [DocentController::class, 'sendHint']);
     Route::get('docent/groepen', [DocentController::class, 'groepen']);
     Route::get('docent/hints/options', [DocentController::class, 'hintOptions']);

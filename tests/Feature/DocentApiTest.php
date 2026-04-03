@@ -3,6 +3,7 @@
 use App\Models\BigBossHint;
 use App\Models\Groep;
 use App\Models\GroepScore;
+use App\Models\GroepVerdachteBank;
 use App\Models\Hint;
 use App\Models\HintVerzending;
 use App\Models\Opdracht;
@@ -90,9 +91,17 @@ it('can pause, resume, and end a session via docent api', function () {
     $endResponse = $this->actingAs($docent)->postJson('/api/v1/docent/spel/end');
     $endResponse->assertOk();
     $endResponse->assertJsonPath('data.status', 'stopped');
+    $endResponse->assertJsonPath('data.winner_group_name', 'Tijdelijke groep');
+    $endResponse->assertJsonPath('data.winner_total_score', 1000);
+
+    $finishedSessie = SpelSessie::query()->latest()->first();
+    expect($finishedSessie)->not->toBeNull();
+    expect($finishedSessie->winner_group_name)->toBe('Tijdelijke groep');
+    expect($finishedSessie->winner_total_score)->toBe(1000);
 
     expect(Groep::query()->count())->toBe(0);
     expect(GroepScore::query()->count())->toBe(0);
+    expect(GroepVerdachteBank::query()->count())->toBe(0);
     expect(Poging::query()->count())->toBe(0);
     expect(HintVerzending::query()->count())->toBe(0);
 
@@ -128,4 +137,68 @@ it('returns docent hint options and groepen', function () {
     $groepenResponse = $this->actingAs($docent)->getJson('/api/v1/docent/groepen');
     $groepenResponse->assertOk();
     $groepenResponse->assertJsonPath('data.0.code', 'GROEP001');
+});
+
+it('can bank and confiscate verdachte money via docent api', function () {
+    $docent = User::factory()->create(['is_docent' => true]);
+
+    $groep = Groep::create([
+        'naam' => 'Groep Bank',
+        'klas' => '5A',
+        'code' => 'BANK0001',
+    ]);
+
+    $opdracht = Opdracht::create([
+        'code' => 'Q-BANK-1',
+        'titel' => 'Bank test',
+        'prompt' => 'Bank test prompt',
+        'correct_query' => 'SELECT 1',
+        'source_table' => 'Verdachte',
+        'verdachte_nummer' => 3,
+        'reward_correct' => 1000,
+        'reward_bad_format' => 500,
+    ]);
+
+    Poging::create([
+        'groep_id' => $groep->id,
+        'opdracht_id' => $opdracht->id,
+        'user_id' => $docent->id,
+        'submitted_query' => 'SELECT 1',
+        'is_correct' => true,
+        'is_good_format' => true,
+        'earned' => 1000,
+        'submitted_at' => now(),
+    ]);
+
+    GroepScore::create([
+        'groep_id' => $groep->id,
+        'score' => 1000,
+        'big_boss_score' => 0,
+    ]);
+
+    $bankResponse = $this->actingAs($docent)->postJson('/api/v1/docent/bank/verdachte', [
+        'groep_id' => $groep->id,
+        'verdachte_nummer' => 3,
+    ]);
+
+    $bankResponse->assertOk();
+    $bankResponse->assertJsonPath('data.changed', true);
+    $bankResponse->assertJsonPath('data.amount', 1000);
+
+    $groepenResponse = $this->actingAs($docent)->getJson('/api/v1/docent/groepen');
+    $groepenResponse->assertOk();
+    $groepenResponse->assertJsonPath('data.0.bank_balance', 1000);
+
+    $confiscateResponse = $this->actingAs($docent)->postJson('/api/v1/docent/bank/confisqueer', [
+        'groep_id' => $groep->id,
+        'verdachte_nummer' => 3,
+    ]);
+
+    $confiscateResponse->assertOk();
+    $confiscateResponse->assertJsonPath('data.changed', true);
+    $confiscateResponse->assertJsonPath('data.amount', 1000);
+
+    $score = GroepScore::query()->where('groep_id', $groep->id)->first();
+    expect($score)->not->toBeNull();
+    expect($score->score)->toBe(0);
 });
