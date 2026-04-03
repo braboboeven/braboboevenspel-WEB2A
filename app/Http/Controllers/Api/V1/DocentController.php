@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Game\ResetGameState;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SendHintRequest;
 use App\Models\BigBossHint;
@@ -27,7 +28,12 @@ class DocentController extends Controller
         return response()->json(['data' => ['id' => $sessie->id, 'status' => $sessie->status]]);
     }
 
-    public function stopSpel(): JsonResponse
+    public function stopSpel(ResetGameState $resetGameState): JsonResponse
+    {
+        return $this->endSpel($resetGameState);
+    }
+
+    public function pauseSpel(): JsonResponse
     {
         $this->ensureDocent();
 
@@ -37,12 +43,44 @@ class DocentController extends Controller
             return response()->json(['message' => 'Geen sessie gevonden.'], 404);
         }
 
-        $sessie->update([
-            'status' => 'stopped',
-            'ended_at' => now(),
-        ]);
+        $sessie->pause();
 
         return response()->json(['data' => ['id' => $sessie->id, 'status' => $sessie->status]]);
+    }
+
+    public function resumeSpel(): JsonResponse
+    {
+        $this->ensureDocent();
+
+        $sessie = SpelSessie::query()->latest()->first();
+
+        if (! $sessie) {
+            return response()->json(['message' => 'Geen sessie gevonden.'], 404);
+        }
+
+        $sessie->resume();
+
+        return response()->json(['data' => ['id' => $sessie->id, 'status' => $sessie->status]]);
+    }
+
+    public function endSpel(ResetGameState $resetGameState): JsonResponse
+    {
+        $this->ensureDocent();
+
+        $sessie = SpelSessie::query()->latest()->first();
+
+        if ($sessie) {
+            $sessie->endGame();
+        }
+
+        $resetGameState();
+
+        return response()->json([
+            'data' => [
+                'id' => $sessie?->id,
+                'status' => 'stopped',
+            ],
+        ]);
     }
 
     public function sendHint(SendHintRequest $request): JsonResponse

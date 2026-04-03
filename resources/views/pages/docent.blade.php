@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Game\ResetGameState;
 use App\Models\BigBossHint;
 use App\Models\Groep;
 use App\Models\GroepScore;
@@ -37,18 +38,45 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
         $this->statusMessage = 'Spel gestart.';
     }
 
-    public function stopSpel(): void
+    public function pauseSpel(): void
+    {
+        $sessie = SpelSessie::query()->latest()->first();
+
+        if (! $sessie) {
+            $this->statusMessage = 'Geen actieve sessie gevonden.';
+
+            return;
+        }
+
+        $sessie->pause();
+        $this->statusMessage = 'Spel gepauzeerd.';
+    }
+
+    public function resumeSpel(): void
+    {
+        $sessie = SpelSessie::query()->latest()->first();
+
+        if (! $sessie) {
+            $this->statusMessage = 'Geen actieve sessie gevonden.';
+
+            return;
+        }
+
+        $sessie->resume();
+        $this->statusMessage = 'Spel hervat.';
+    }
+
+    public function endSpel(ResetGameState $resetGameState): void
     {
         $sessie = SpelSessie::query()->latest()->first();
 
         if ($sessie) {
-            $sessie->update([
-                'status' => 'stopped',
-                'ended_at' => now(),
-            ]);
+            $sessie->endGame();
         }
 
-        $this->statusMessage = 'Spel gestopt.';
+        $resetGameState();
+
+        $this->statusMessage = 'Spel beëindigd en groepen opgeschoond.';
     }
 
     public function sendHint(): void
@@ -245,8 +273,14 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
                     <button wire:click="startSpel" class="rounded-xl border border-white/10 bg-[#1a1a1d] px-4 py-2 text-sm">
                         Start spel
                     </button>
-                    <button wire:click="stopSpel" class="rounded-xl border border-white/10 bg-[#1a1a1d] px-4 py-2 text-sm">
-                        Stop spel
+                    <button wire:click="pauseSpel" class="rounded-xl border border-white/10 bg-[#1a1a1d] px-4 py-2 text-sm">
+                        Pauzeer spel
+                    </button>
+                    <button wire:click="resumeSpel" class="rounded-xl border border-white/10 bg-[#1a1a1d] px-4 py-2 text-sm">
+                        Hervat spel
+                    </button>
+                    <button wire:click="endSpel" class="rounded-xl border border-white/10 bg-[#1a1a1d] px-4 py-2 text-sm">
+                        Eindig spel
                     </button>
                 </div>
                 <div class="mt-3 text-xs uppercase tracking-[0.2em] text-zinc-400">

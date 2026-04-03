@@ -72,4 +72,49 @@ class SpelSessie extends Model
 
         return $minutes.':'.$seconds;
     }
+
+    public function pause(): void
+    {
+        if ($this->status !== 'running') {
+            return;
+        }
+
+        $this->forceFill([
+            'status' => 'paused',
+            'paused_at' => now(),
+        ])->save();
+    }
+
+    public function resume(): void
+    {
+        if ($this->status !== 'paused') {
+            return;
+        }
+
+        $pausedSeconds = $this->paused_at
+            ? $this->paused_at->diffInSeconds(now())
+            : 0;
+
+        $this->forceFill([
+            'status' => 'running',
+            'paused_at' => null,
+            'total_paused_seconds' => (int) $this->total_paused_seconds + $pausedSeconds,
+        ])->save();
+    }
+
+    public function endGame(): void
+    {
+        $totalPausedSeconds = (int) $this->total_paused_seconds;
+
+        if ($this->status === 'paused' && $this->paused_at) {
+            $totalPausedSeconds += $this->paused_at->diffInSeconds(now());
+        }
+
+        $this->forceFill([
+            'status' => 'stopped',
+            'ended_at' => now(),
+            'paused_at' => null,
+            'total_paused_seconds' => $totalPausedSeconds,
+        ])->save();
+    }
 }

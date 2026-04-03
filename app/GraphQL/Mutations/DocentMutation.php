@@ -2,6 +2,7 @@
 
 namespace App\GraphQL\Mutations;
 
+use App\Actions\Game\ResetGameState;
 use App\Models\BigBossHint;
 use App\Models\Hint;
 use App\Models\HintVerzending;
@@ -21,7 +22,7 @@ class DocentMutation
         ]);
     }
 
-    public function stopSpel(): SpelSessie
+    public function stopSpel(ResetGameState $resetGameState): SpelSessie
     {
         $this->ensureDocent();
 
@@ -30,10 +31,8 @@ class DocentMutation
             abort(404, 'Geen sessie gevonden.');
         }
 
-        $sessie->update([
-            'status' => 'stopped',
-            'ended_at' => now(),
-        ]);
+        $sessie->endGame();
+        $resetGameState();
 
         return $sessie;
     }

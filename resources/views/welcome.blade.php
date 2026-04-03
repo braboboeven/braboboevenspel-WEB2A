@@ -1,4 +1,95 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+    <head>
+        @include('partials.head')
+    </head>
+    <body class="min-h-screen bg-[#1a1a1d] text-white antialiased">
+        <div class="mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-between px-6 py-10 lg:px-10">
+            <header class="flex items-center justify-between gap-4">
+                <a href="{{ route('home') }}" class="rounded-xl bg-[#2e2e33] px-4 py-2 text-sm uppercase tracking-[0.3em]">
+                    Brabo-Boevenspel
+                </a>
+
+                <div class="flex items-center gap-3">
+                    @auth
+                        <a href="{{ route('dashboard') }}" class="rounded-xl border border-white/20 px-4 py-2 text-sm" wire:navigate>
+                            Dashboard
+                        </a>
+                        <a href="{{ route('spel') }}" class="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#1a1a1d]" wire:navigate>
+                            Naar spel
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="rounded-xl border border-white/20 px-4 py-2 text-sm">
+                            Inloggen
+                        </a>
+                        @if (Route::has('register'))
+                            <a href="{{ route('register') }}" class="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#1a1a1d]">
+                                Registreren
+                            </a>
+                        @endif
+                    @endauth
+                </div>
+            </header>
+
+            <main class="grid gap-8 py-10 lg:grid-cols-[1fr_340px] lg:items-center">
+                <section class="rounded-2xl bg-[#242429] p-8">
+                    <p class="text-xs uppercase tracking-[0.35em] text-zinc-400">SQL Detective Game</p>
+                    <h1 class="mt-4 text-4xl font-semibold leading-tight">
+                        Vind de Big Boss met slimme SQL-vragen.
+                    </h1>
+                    <p class="mt-4 max-w-2xl text-zinc-300">
+                        Werk in team, los opdrachten op, verdien punten en volg hints om de verdachte te ontmaskeren.
+                    </p>
+
+                    <div class="mt-8 flex flex-wrap gap-3">
+                        @auth
+                            <a href="{{ route('spel') }}" class="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-[#1a1a1d]" wire:navigate>
+                                Start spel
+                            </a>
+                            <a href="{{ route('leaderboard') }}" class="rounded-xl border border-white/20 px-5 py-3 text-sm" wire:navigate>
+                                Bekijk leaderboard
+                            </a>
+                        @else
+                            <a href="{{ route('login') }}" class="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-[#1a1a1d]">
+                                Inloggen om te spelen
+                            </a>
+                        @endauth
+                    </div>
+                </section>
+
+                <aside class="rounded-2xl bg-[#2e2e33] p-6">
+                    <h2 class="text-sm uppercase tracking-[0.3em] text-zinc-400">Snel naar</h2>
+                    <div class="mt-4 grid gap-3">
+                        <a href="{{ route('regels') }}" class="rounded-xl border border-white/15 bg-[#1a1a1d] px-4 py-3 text-sm" wire:navigate>
+                            Spelregels
+                        </a>
+                        <a href="{{ route('leaderboard') }}" class="rounded-xl border border-white/15 bg-[#1a1a1d] px-4 py-3 text-sm" wire:navigate>
+                            Leaderboard
+                        </a>
+                        @auth
+                            @if (auth()->user()?->is_docent)
+                                <a href="{{ route('docent') }}" class="rounded-xl border border-white/15 bg-[#1a1a1d] px-4 py-3 text-sm" wire:navigate>
+                                    Docentpaneel
+                                </a>
+                            @endif
+                            <a href="{{ route('dashboard') }}" class="rounded-xl border border-white/15 bg-[#1a1a1d] px-4 py-3 text-sm" wire:navigate>
+                                Dashboard
+                            </a>
+                        @endif
+                    </div>
+                </aside>
+            </main>
+
+            <footer class="pt-6 text-xs uppercase tracking-[0.2em] text-zinc-500">
+                Brabo-Boevenspel
+            </footer>
+        </div>
+
+        @livewireScripts
+        @fluxScripts
+    </body>
+</html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">

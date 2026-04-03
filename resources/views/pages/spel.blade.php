@@ -63,6 +63,14 @@ new #[Title('Spel'), Layout('layouts.game')] class extends Component {
 
     public function submitQuery(QueryEvaluator $evaluator): void
     {
+        $sessie = SpelSessie::query()->latest()->first();
+
+        if (! $sessie || $sessie->status !== 'running') {
+            $this->resultMessage = 'Het spel is momenteel niet actief.';
+
+            return;
+        }
+
         $validated = $this->validate([
             'selectedOpdrachtId' => ['required', 'integer', 'exists:opdrachts,id'],
             'submittedQuery' => ['required', 'string'],
@@ -131,7 +139,31 @@ new #[Title('Spel'), Layout('layouts.game')] class extends Component {
             ? 'Goed gedaan! Score toegevoegd.'
             : 'Niet correct, probeer het opnieuw.';
 
+        if ($result['is_correct']) {
+            $this->selectNextOpdracht();
+        }
+
         $this->submittedQuery = '';
+    }
+
+    private function selectNextOpdracht(): void
+    {
+        if (! $this->selectedOpdrachtId) {
+            return;
+        }
+
+        $opdrachtIds = $this->opdrachten->pluck('id')->values();
+        $currentIndex = $opdrachtIds->search($this->selectedOpdrachtId);
+
+        if ($currentIndex === false) {
+            return;
+        }
+
+        $nextOpdrachtId = $opdrachtIds->get($currentIndex + 1);
+
+        if ($nextOpdrachtId) {
+            $this->selectedOpdrachtId = (int) $nextOpdrachtId;
+        }
     }
 
     private function updateScore(Groep $groep, Opdracht $opdracht, int $earned): void
@@ -207,46 +239,65 @@ new #[Title('Spel'), Layout('layouts.game')] class extends Component {
 
         return $sessie->elapsedFormatted();
     }
+
+    #[Computed]
+    public function gameIsActive(): bool
+    {
+        return $this->spelSessie?->status === 'running';
+    }
+
+    #[Computed]
+    public function gameStatusLabel(): string
+    {
+        $status = $this->spelSessie?->status;
+
+        return match ($status) {
+            'running' => 'Spel actief',
+            'paused' => 'Spel gepauzeerd',
+            'stopped' => 'Spel beëindigd',
+            default => 'Spel nog niet gestart',
+        };
+    }
 }; ?>
 
-<div class="min-h-screen w-full bg-[#3f3f46] text-white" wire:poll.1s="$refresh">
-    <div class="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 lg:px-8">
+<div class="game-shell" wire:poll.1s="$refresh">
+    <div class="game-container max-w-6xl gap-8">
         @if (! $this->groep)
             <div class="flex flex-col items-center gap-8 text-center">
-                <div class="rounded-2xl bg-[#1a1a1d] px-8 py-4 text-3xl uppercase tracking-[0.25em]">
+                <div class="rounded-2xl bg-zinc-900 px-8 py-4 text-3xl uppercase tracking-[0.25em]">
                     brabo-boevenspel
                 </div>
 
                 <div class="grid w-full max-w-4xl gap-6 lg:grid-cols-2">
-                    <form wire:submit="joinGroep" class="rounded-2xl bg-[#2e2e33] p-6 text-left">
+                    <form wire:submit="joinGroep" class="game-card text-left">
                         <div class="text-xs uppercase tracking-[0.3em] text-zinc-400">Spel-code</div>
                         <input
                             wire:model="groepCode"
-                            class="mt-3 w-full rounded-xl border border-white/10 bg-white px-4 py-2 text-lg text-black"
+                            class="game-input-light mt-3 text-lg"
                             maxlength="8"
                             placeholder="00000000"
                             required
                         />
-                        <button type="submit" class="mt-4 w-full rounded-xl bg-black px-4 py-2 text-sm uppercase tracking-[0.3em]">
+                        <button type="submit" class="game-btn-dark mt-4 w-full">
                             start
                         </button>
                     </form>
 
-                    <form wire:submit="createGroep" class="rounded-2xl bg-[#2e2e33] p-6 text-left">
+                    <form wire:submit="createGroep" class="game-card text-left">
                         <div class="text-xs uppercase tracking-[0.3em] text-zinc-400">Teamnaam</div>
                         <input
                             wire:model="groepNaam"
-                            class="mt-3 w-full rounded-xl border border-white/10 bg-white px-4 py-2 text-lg text-black"
+                            class="game-input-light mt-3 text-lg"
                             placeholder="Naam"
                             required
                         />
                         <div class="mt-4 text-xs uppercase tracking-[0.3em] text-zinc-400">Klas (optioneel)</div>
                         <input
                             wire:model="groepKlas"
-                            class="mt-3 w-full rounded-xl border border-white/10 bg-white px-4 py-2 text-lg text-black"
+                            class="game-input-light mt-3 text-lg"
                             placeholder="Klas"
                         />
-                        <button type="submit" class="mt-4 w-full rounded-xl bg-black px-4 py-2 text-sm uppercase tracking-[0.3em]">
+                        <button type="submit" class="game-btn-dark mt-4 w-full">
                             maak groep
                         </button>
                     </form>
@@ -260,29 +311,35 @@ new #[Title('Spel'), Layout('layouts.game')] class extends Component {
             </div>
         @else
             <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="rounded-xl bg-[#1a1a1d] px-6 py-3 text-lg tracking-[0.4em]">
+                <div class="game-panel text-lg tracking-[0.4em]">
                     {{ $this->groep->code }}
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
-                    <div class="rounded-xl bg-[#1a1a1d] px-6 py-3 text-lg">
+                    <div class="game-panel text-lg">
                         {{ $this->elapsedFormatted }}
                     </div>
-                    <div class="rounded-xl bg-[#1a1a1d] px-6 py-3 text-lg">
+                    <div class="game-panel text-lg">
                         {{ $this->selectedOpdracht?->code ?? '0' }}/{{ $this->opdrachten->count() }}
                     </div>
                 </div>
             </div>
 
             <div class="grid gap-6 lg:grid-cols-[1fr_320px]">
-                <div class="rounded-2xl bg-[#2e2e33] p-6">
+                <div class="game-card">
                     <div class="text-lg text-zinc-200">
                         {{ $this->selectedOpdracht?->prompt ?? '-- De verdachte komt een gebouw uit. Het is een vrouw' }}
                     </div>
 
+                    @unless ($this->gameIsActive)
+                        <div class="mt-4 rounded-xl border border-yellow-400/60 bg-zinc-900 px-4 py-3 text-sm text-yellow-200">
+                            {{ $this->gameStatusLabel }}. Antwoorden is tijdelijk uitgeschakeld.
+                        </div>
+                    @endunless
+
                     <form wire:submit="submitQuery" class="mt-6 grid gap-4">
                         <div>
                             <label class="text-xs uppercase tracking-[0.3em] text-zinc-400">Opdracht</label>
-                            <select wire:model="selectedOpdrachtId" class="mt-2 w-full rounded-xl border border-white/10 bg-[#1a1a1d] px-3 py-2 text-sm text-white">
+                            <select wire:model="selectedOpdrachtId" @disabled(! $this->gameIsActive) class="game-input mt-2 disabled:cursor-not-allowed disabled:opacity-50">
                                 <option value="">Selecteer opdracht</option>
                                 @foreach ($this->opdrachten as $opdracht)
                                     <option value="{{ $opdracht->id }}">
@@ -292,17 +349,18 @@ new #[Title('Spel'), Layout('layouts.game')] class extends Component {
                             </select>
                         </div>
 
-                        <div class="rounded-xl bg-[#1a1a1d] p-4">
+                        <div class="rounded-xl bg-zinc-900 p-4">
                             <textarea
                                 wire:model="submittedQuery"
                                 rows="5"
-                                class="h-28 w-full resize-none bg-transparent text-center text-lg text-white outline-none"
+                                @disabled(! $this->gameIsActive)
+                                class="h-28 w-full resize-none bg-transparent text-center text-lg text-white outline-none disabled:cursor-not-allowed disabled:opacity-50"
                                 placeholder="Antwoord"
                                 required
                             ></textarea>
                         </div>
 
-                        <button type="submit" class="rounded-xl bg-black px-4 py-2 text-sm uppercase tracking-[0.3em]">
+                        <button type="submit" @disabled(! $this->gameIsActive) class="game-btn-dark disabled:cursor-not-allowed disabled:opacity-50">
                             controleer
                         </button>
                     </form>
@@ -317,7 +375,7 @@ new #[Title('Spel'), Layout('layouts.game')] class extends Component {
                     @endphp
 
                     @if ($resultMessage || $correctQuery)
-                        <div class="mt-6 rounded-xl border {{ $feedbackBorder }} bg-[#1a1a1d] p-4 text-sm">
+                        <div class="mt-6 rounded-xl border {{ $feedbackBorder }} bg-zinc-900 p-4 text-sm">
                             @if ($resultMessage)
                                 <div class="text-lg">{{ $resultMessage }}</div>
                             @endif
@@ -329,11 +387,11 @@ new #[Title('Spel'), Layout('layouts.game')] class extends Component {
                     @endif
                 </div>
 
-                <aside class="rounded-2xl bg-[#1a1a1d] p-4">
+                <aside class="game-card-soft bg-zinc-900">
                     <div class="text-xs uppercase tracking-[0.3em] text-zinc-400">Hints</div>
                     <div class="mt-4 space-y-3">
                         @forelse ($this->ontvangenHints as $hint)
-                            <div class="rounded-xl border border-white/10 bg-[#2e2e33] p-3 text-sm">
+                            <div class="rounded-xl border border-white/10 bg-zinc-800 p-3 text-sm">
                                 <div class="font-semibold">
                                     {{ $hint->hint?->hint_beschrijving ?? 'Big Boss hint' }}
                                 </div>
