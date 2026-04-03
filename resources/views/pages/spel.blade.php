@@ -83,12 +83,17 @@ new #[Title('Spel'), Layout('layouts.game')] class extends Component {
             return;
         }
 
-        $opdracht = Opdracht::query()->findOrFail($validated['selectedOpdrachtId']);
+        $opdracht = Opdracht::query()
+            ->with('bigBossQuery')
+            ->findOrFail($validated['selectedOpdrachtId']);
+
+        $correctQuery = $opdracht->resolvedCorrectQuery();
+        $rewardCorrect = $opdracht->resolvedRewardCorrect();
 
         $result = $evaluator->evaluate(
             $validated['submittedQuery'],
-            $opdracht->correct_query,
-            $opdracht->reward_correct,
+            $correctQuery,
+            $rewardCorrect,
             $opdracht->reward_bad_format
         );
 
@@ -106,7 +111,7 @@ new #[Title('Spel'), Layout('layouts.game')] class extends Component {
 
         $earned = (int) $result['earned'];
         if ($opdracht->is_big_boss && $result['is_correct'] && ! $result['is_good_format']) {
-            $earned = max(0, $opdracht->reward_correct - 500);
+            $earned = max(0, $rewardCorrect - $opdracht->resolvedBigBossBadFormatPenalty());
         }
 
         if (! $opdracht->is_big_boss && $opdracht->verdachte_nummer) {
@@ -134,7 +139,7 @@ new #[Title('Spel'), Layout('layouts.game')] class extends Component {
 
         $this->submittedCount = $result['submitted_count'];
         $this->correctCount = $result['correct_count'];
-        $this->correctQuery = $opdracht->correct_query;
+        $this->correctQuery = $correctQuery;
         $this->resultMessage = $result['is_correct']
             ? 'Goed gedaan! Score toegevoegd.'
             : 'Niet correct, probeer het opnieuw.';

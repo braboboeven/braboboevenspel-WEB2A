@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\BigBossQuery;
 use App\Models\Groep;
 use App\Models\GroepScore;
 use App\Models\Opdracht;
@@ -72,4 +73,43 @@ it('caps big boss score at 10000 via api submissions', function () {
 
     expect($groepScore)->not->toBeNull();
     expect($groepScore->big_boss_score)->toBe(10000);
+});
+
+it('uses dedicated big boss query table for big boss opdrachten', function () {
+    $user = User::factory()->create();
+    $groep = Groep::create([
+        'naam' => 'Team QueryTable',
+        'klas' => '4D',
+        'code' => 'BBQRY001',
+    ]);
+    $groep->gebruikers()->attach($user->id, ['is_leider' => true]);
+
+    $bigBossQuery = BigBossQuery::create([
+        'code' => 'BBQ-1',
+        'titel' => 'Big Boss table query',
+        'correct_query' => 'SELECT 42 AS boss',
+        'reward_correct' => 10000,
+        'bad_format_penalty' => 500,
+    ]);
+
+    $opdracht = Opdracht::create([
+        'code' => 'BB-TABLE-1',
+        'titel' => 'Big Boss via table',
+        'prompt' => 'Gebruik de Big Boss query tabel',
+        'correct_query' => 'SELECT 1',
+        'source_table' => 'Verdachte',
+        'is_big_boss' => true,
+        'big_boss_query_id' => $bigBossQuery->id,
+        'reward_correct' => 1000,
+        'reward_bad_format' => 500,
+    ]);
+
+    $response = $this->actingAs($user)->postJson('/api/v1/opdrachten/submit', [
+        'opdracht_id' => $opdracht->id,
+        'query' => 'SELECT 42 AS boss',
+    ]);
+
+    $response->assertOk();
+    $response->assertJsonPath('data.is_correct', true);
+    $response->assertJsonPath('data.correct_query', 'SELECT 42 AS boss');
 });

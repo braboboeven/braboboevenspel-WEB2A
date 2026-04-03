@@ -32,6 +32,7 @@ class OpdrachtController extends Controller
             'verdachte_nummer' => $opdracht->verdachte_nummer,
             'step_nummer' => $opdracht->step_nummer,
             'is_big_boss' => $opdracht->is_big_boss,
+            'big_boss_query_id' => $opdracht->big_boss_query_id,
             'reward_correct' => $opdracht->reward_correct,
             'reward_bad_format' => $opdracht->reward_bad_format,
         ]);
@@ -47,12 +48,17 @@ class OpdrachtController extends Controller
         }
 
         $validated = $request->validated();
-        $opdracht = Opdracht::query()->findOrFail($validated['opdracht_id']);
+        $opdracht = Opdracht::query()
+            ->with('bigBossQuery')
+            ->findOrFail($validated['opdracht_id']);
+
+        $correctQuery = $opdracht->resolvedCorrectQuery();
+        $rewardCorrect = $opdracht->resolvedRewardCorrect();
 
         $result = $evaluator->evaluate(
             $validated['query'],
-            $opdracht->correct_query,
-            $opdracht->reward_correct,
+            $correctQuery,
+            $rewardCorrect,
             $opdracht->reward_bad_format
         );
 
@@ -66,7 +72,7 @@ class OpdrachtController extends Controller
 
         $earned = (int) $result['earned'];
         if ($opdracht->is_big_boss && $result['is_correct'] && ! $result['is_good_format']) {
-            $earned = max(0, $opdracht->reward_correct - 500);
+            $earned = max(0, $rewardCorrect - $opdracht->resolvedBigBossBadFormatPenalty());
         }
 
         if (! $opdracht->is_big_boss && $opdracht->verdachte_nummer) {
@@ -99,7 +105,7 @@ class OpdrachtController extends Controller
                 'earned' => $earned,
                 'submitted_count' => $result['submitted_count'],
                 'correct_count' => $result['correct_count'],
-                'correct_query' => $opdracht->correct_query,
+                'correct_query' => $correctQuery,
             ],
         ]);
     }

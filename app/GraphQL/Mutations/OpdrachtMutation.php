@@ -21,12 +21,17 @@ class OpdrachtMutation
             abort(422, 'Je moet eerst aan een groep gekoppeld zijn.');
         }
 
-        $opdracht = Opdracht::query()->findOrFail($args['opdracht_id']);
+        $opdracht = Opdracht::query()
+            ->with('bigBossQuery')
+            ->findOrFail($args['opdracht_id']);
+
+        $correctQuery = $opdracht->resolvedCorrectQuery();
+        $rewardCorrect = $opdracht->resolvedRewardCorrect();
 
         $result = $evaluator->evaluate(
             $args['query'],
-            $opdracht->correct_query,
-            $opdracht->reward_correct,
+            $correctQuery,
+            $rewardCorrect,
             $opdracht->reward_bad_format
         );
 
@@ -40,7 +45,7 @@ class OpdrachtMutation
 
         $earned = (int) $result['earned'];
         if ($opdracht->is_big_boss && $result['is_correct'] && ! $result['is_good_format']) {
-            $earned = max(0, $opdracht->reward_correct - 500);
+            $earned = max(0, $rewardCorrect - $opdracht->resolvedBigBossBadFormatPenalty());
         }
 
         if (! $opdracht->is_big_boss && $opdracht->verdachte_nummer) {
@@ -72,7 +77,7 @@ class OpdrachtMutation
             'earned' => $earned,
             'submitted_count' => $result['submitted_count'],
             'correct_count' => $result['correct_count'],
-            'correct_query' => $opdracht->correct_query,
+            'correct_query' => $correctQuery,
         ];
     }
 

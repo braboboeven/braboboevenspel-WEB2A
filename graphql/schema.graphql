@@ -45,6 +45,7 @@ type Opdracht {
   verdachte_nummer: Int
   step_nummer: Int
   is_big_boss: Boolean!
+  big_boss_query_id: Int
   reward_correct: Int!
   reward_bad_format: Int!
 }
