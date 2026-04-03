@@ -121,27 +121,15 @@ new #[Title('Docent dashboard'), Layout('layouts.game')] class extends Component
     public function elapsedFormatted(): string
     {
         $sessie = $this->sessie;
-        if (! $sessie || ! $sessie->started_at) {
+        if (! $sessie) {
             return '00:00';
         }
 
-        $endTime = match ($sessie->status) {
-            'running' => now(),
-            'paused' => $sessie->paused_at ?? now(),
-            default => $sessie->ended_at ?? now(),
-        };
-
-        $elapsed = $endTime->diffInSeconds($sessie->started_at) - $sessie->total_paused_seconds;
-        $elapsed = max(0, $elapsed);
-
-        $minutes = str_pad((string) intdiv($elapsed, 60), 2, '0', STR_PAD_LEFT);
-        $seconds = str_pad((string) ($elapsed % 60), 2, '0', STR_PAD_LEFT);
-
-        return $minutes.':'.$seconds;
+        return $sessie->elapsedFormatted();
     }
 }; ?>
 
-<div class="min-h-screen w-full bg-[#1a1a1d] text-white" wire:poll.1s>
+<div class="min-h-screen w-full bg-[#1a1a1d] text-white" wire:poll.1s="$refresh">
     <div class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 lg:px-8">
         <div class="grid gap-6 lg:grid-cols-[280px_1fr_220px]">
             <section class="rounded-2xl bg-[#2e2e33] p-4">

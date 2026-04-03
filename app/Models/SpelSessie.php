@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
+use Database\Factories\SpelSessieFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SpelSessie extends Model
 {
-    /** @use HasFactory<\Database\Factories\SpelSessieFactory> */
+    /** @use HasFactory<SpelSessieFactory> */
     use HasFactory;
 
     /**
@@ -42,5 +44,32 @@ class SpelSessie extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    public function elapsedSeconds(?CarbonInterface $referenceTime = null): int
+    {
+        if (! $this->started_at) {
+            return 0;
+        }
+
+        $endTime = $referenceTime ?? match ($this->status) {
+            'running' => now(),
+            'paused' => $this->paused_at ?? now(),
+            default => $this->ended_at ?? now(),
+        };
+
+        $elapsed = $this->started_at->diffInSeconds($endTime) - $this->total_paused_seconds;
+
+        return max(0, (int) $elapsed);
+    }
+
+    public function elapsedFormatted(?CarbonInterface $referenceTime = null): string
+    {
+        $elapsed = $this->elapsedSeconds($referenceTime);
+
+        $minutes = str_pad((string) intdiv($elapsed, 60), 2, '0', STR_PAD_LEFT);
+        $seconds = str_pad((string) ($elapsed % 60), 2, '0', STR_PAD_LEFT);
+
+        return $minutes.':'.$seconds;
     }
 }
